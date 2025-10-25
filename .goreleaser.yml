@@ -51,7 +51,7 @@ brews:
       owner: doji-co
       name: homebrew-tap
       token: "{{ .Env.HOMEBREW_TAP_GITHUB_TOKEN }}"
-    folder: Formula
+    directory: Formula
     homepage: https://github.com/doji-co/agent-builder
     description: "ADK Multi-Agent Builder CLI"
     license: MIT
