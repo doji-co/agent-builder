@@ -43,39 +43,23 @@ go build -o agent-builder .
 ./agent-builder
 ```
 
-## Releasing
+## Contributing
 
-To create a new release:
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-1. Tag the commit:
-   ```bash
-   git tag v0.1.0
-   ```
+### Releasing (for maintainers)
 
-2. Push the tag:
-   ```bash
-   git push origin v0.1.0
-   ```
+To create a new release, tag the commit and push:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
 
 This will automatically:
 - Build binaries for multiple platforms
 - Create a GitHub Release
 - Update the Homebrew tap
-
-### First Release Setup
-
-Before your first release, you need to:
-
-1. **Create the Homebrew tap repository**:
-   - Go to https://github.com/new
-   - Create a new **public** repository named `homebrew-tap` under the `doji-co` organization
-   - The repository can be empty (no need to initialize with README)
-
-2. **Create a Personal Access Token**:
-   - Go to https://github.com/settings/tokens?type=beta
-   - Generate a fine-grained token with access to the `homebrew-tap` repository
-   - Grant "Contents: Read and write" permission
-   - Add it as a repository secret named `HOMEBREW_TAP_GITHUB_TOKEN` in the `agent-builder` repository settings
 
 ## About ADK
 
