@@ -32,13 +32,13 @@ func TestGenerator_GenerateAgentPy(t *testing.T) {
 		"SequentialAgent",
 		"LlmAgent",
 		"researcher = LlmAgent(",
-		`name="Researcher"`,
+		`name="researcher"`,
 		`instruction="Research the topic"`,
 		`output_key="research_data"`,
 		"writer = LlmAgent(",
-		`name="Writer"`,
+		`name="writer"`,
 		"research_coordinator = SequentialAgent(",
-		`name="ResearchCoordinator"`,
+		`name="research_coordinator"`,
 		"sub_agents=[researcher, writer]",
 		"root_agent = research_coordinator",
 	}
@@ -198,8 +198,8 @@ func TestGenerator_GenerateAgentPy_WithHyphens(t *testing.T) {
 		t.Error("GenerateAgentPy() should convert hyphens to underscores in variable names")
 	}
 
-	if !strings.Contains(content, `name="grafana-agent"`) {
-		t.Error("GenerateAgentPy() should keep original name in the name field")
+	if !strings.Contains(content, `name="grafana_agent"`) {
+		t.Error("GenerateAgentPy() should convert hyphens to underscores in the name field")
 	}
 }
 
@@ -226,7 +226,7 @@ func TestGenerator_GenerateOrchestratorPy(t *testing.T) {
 		"from researcher.agent import agent as researcher",
 		"from writer.agent import agent as writer",
 		"agent = SequentialAgent(",
-		`name="ResearchCoordinator"`,
+		`name="research_coordinator"`,
 		"sub_agents=[researcher, writer]",
 		"root_agent = agent",
 	}
@@ -257,7 +257,7 @@ func TestGenerator_GenerateSubAgentPy(t *testing.T) {
 	expectedStrings := []string{
 		"from google.adk.agents import LlmAgent",
 		"agent = LlmAgent(",
-		`name="Researcher"`,
+		`name="researcher"`,
 		`instruction="Research the topic"`,
 		`output_key="research_data"`,
 		`model="gemini-2.0-flash"`,

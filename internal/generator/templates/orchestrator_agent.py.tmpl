@@ -4,7 +4,7 @@ from {{ snakeCase .Name }}.agent import agent as {{ snakeCase .Name }}
 {{- end }}
 
 agent = {{ getAgentClass .Pattern }}(
-    name="{{ .Name }}",
+    name="{{ snakeCase .Name }}",
     {{- if ne .Pattern.String "Sequential" }}
     {{- if ne .Pattern.String "Parallel" }}
     model="{{ .Model }}",

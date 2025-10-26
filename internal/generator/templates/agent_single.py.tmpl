@@ -1,7 +1,7 @@
 from google.adk.agents import LlmAgent
 
 agent = LlmAgent(
-    name="{{ .Name }}",
+    name="{{ snakeCase .Name }}",
     model="{{ .Model }}",
     instruction="{{ .Instruction }}",
     {{- if .OutputKey }}

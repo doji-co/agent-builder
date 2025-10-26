@@ -2,7 +2,7 @@ from google.adk.agents import {{ getImports . }}
 
 {{- range .Orchestrator.SubAgents }}
 {{ snakeCase .Name }} = LlmAgent(
-    name="{{ .Name }}",
+    name="{{ snakeCase .Name }}",
     model="{{ .Model }}",
     instruction="{{ .Instruction }}",
     {{- if .OutputKey }}
@@ -13,7 +13,7 @@ from google.adk.agents import {{ getImports . }}
 {{- end }}
 
 {{ snakeCase .Orchestrator.Name }} = {{ getAgentClass .Orchestrator.Pattern }}(
-    name="{{ .Orchestrator.Name }}",
+    name="{{ snakeCase .Orchestrator.Name }}",
     {{- if ne .Orchestrator.Pattern.String "Sequential" }}
     {{- if ne .Orchestrator.Pattern.String "Parallel" }}
     model="{{ .Orchestrator.Model }}",
