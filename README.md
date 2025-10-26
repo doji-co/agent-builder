@@ -66,9 +66,16 @@ This will automatically:
 
 Before your first release, you need to:
 
-1. Create a personal access token with `repo` permissions
-2. Add it as a repository secret named `HOMEBREW_TAP_GITHUB_TOKEN`
-3. Create the homebrew tap repository: `github.com/doji-co/homebrew-tap`
+1. **Create the Homebrew tap repository**:
+   - Go to https://github.com/new
+   - Create a new **public** repository named `homebrew-tap` under the `doji-co` organization
+   - The repository can be empty (no need to initialize with README)
+
+2. **Create a Personal Access Token**:
+   - Go to https://github.com/settings/tokens?type=beta
+   - Generate a fine-grained token with access to the `homebrew-tap` repository
+   - Grant "Contents: Read and write" permission
+   - Add it as a repository secret named `HOMEBREW_TAP_GITHUB_TOKEN` in the `agent-builder` repository settings
 
 ## About ADK
 
