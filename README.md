@@ -16,11 +16,60 @@ Download the latest release from the [releases page](https://github.com/doji-co/
 
 ## Usage
 
+### Create a New Multi-Agent Project
+
+Run the interactive CLI to create a new multi-agent system:
+
 ```bash
-agent-builder
+agent-builder create
 ```
 
-Check version:
+The CLI will guide you through:
+1. **Project name** - Name for your multi-agent project
+2. **Orchestrator details** - The root agent that coordinates sub-agents
+   - Name
+   - Orchestration pattern (Sequential, Parallel, LLM-Coordinated, or Loop)
+   - Description
+   - Model selection (gemini-2.5-flash, gemini-2.5-pro, or gemini-2.5-flash-lite)
+3. **Sub-agents** - Individual agents that perform specific tasks
+   - Name
+   - Type (LLM or Tool)
+   - Instruction
+   - Output key
+   - Model
+
+### Generated Project Structure
+
+```
+your-project/
+├── orchestrator_name/
+│   └── agent.py       # Orchestrator agent
+├── sub_agent_1/
+│   └── agent.py       # Sub-agent 1
+├── sub_agent_2/
+│   └── agent.py       # Sub-agent 2
+├── main.py            # Example usage
+├── requirements.txt   # Python dependencies
+└── README.md          # Project documentation
+```
+
+### Running Your Agent
+
+After creating your project:
+
+```bash
+cd your-project
+pip install -r requirements.txt
+
+# Run with command line
+python main.py "Your prompt here"
+
+# Or use ADK web interface
+adk web
+```
+
+### Check Version
+
 ```bash
 agent-builder version
 ```
