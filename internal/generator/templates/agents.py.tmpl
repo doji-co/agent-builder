@@ -1,0 +1,28 @@
+from google.adk.agents import {{ getImports . }}
+
+{{- range .Orchestrator.SubAgents }}
+{{ snakeCase .Name }} = LlmAgent(
+    name="{{ .Name }}",
+    model="{{ .Model }}",
+    instruction="{{ .Instruction }}",
+    {{- if .OutputKey }}
+    output_key="{{ .OutputKey }}",
+    {{- end }}
+)
+
+{{- end }}
+
+{{ snakeCase .Orchestrator.Name }} = {{ getAgentClass .Orchestrator.Pattern }}(
+    name="{{ .Orchestrator.Name }}",
+    {{- if ne .Orchestrator.Pattern.String "Sequential" }}
+    {{- if ne .Orchestrator.Pattern.String "Parallel" }}
+    model="{{ .Orchestrator.Model }}",
+    {{- end }}
+    {{- end }}
+    {{- if .Orchestrator.Description }}
+    description="{{ .Orchestrator.Description }}",
+    {{- end }}
+    sub_agents=[{{ range $i, $agent := .Orchestrator.SubAgents }}{{ if $i }}, {{ end }}{{ snakeCase $agent.Name }}{{ end }}],
+)
+
+root_agent = {{ snakeCase .Orchestrator.Name }}

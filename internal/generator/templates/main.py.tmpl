@@ -1,0 +1,21 @@
+import sys
+from agents import root_agent
+
+def main():
+    if len(sys.argv) < 2:
+        print("Usage: python main.py '<your prompt>'")
+        print("Example: python main.py 'Research the benefits of meditation'")
+        sys.exit(1)
+
+    user_prompt = sys.argv[1]
+
+    print(f"Running {{ .Orchestrator.Name }}...")
+    print(f"Prompt: {user_prompt}\n")
+
+    result = root_agent.run(user_prompt)
+
+    print("\n=== Result ===")
+    print(result)
+
+if __name__ == "__main__":
+    main()
