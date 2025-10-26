@@ -27,6 +27,19 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	interactive := prompt.NewInteractive()
 
 	fmt.Println("🤖 Welcome to Agent Builder!")
+
+	projectType, err := interactive.PromptProjectType()
+	if err != nil {
+		return fmt.Errorf("failed to get project type: %w", err)
+	}
+
+	if projectType == "full" {
+		return runCreateFullProject(interactive)
+	}
+	return runCreateSingleAgent(interactive)
+}
+
+func runCreateFullProject(interactive *prompt.Interactive) error {
 	fmt.Println("Let's create your multi-agent system.")
 
 	projectName, err := interactive.PromptProjectName()
@@ -182,6 +195,77 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	fmt.Println("  # Or use ADK web interface:")
 	fmt.Println("  adk web")
 	fmt.Println("  # Then open http://localhost:8000 in your browser")
+
+	return nil
+}
+
+func runCreateSingleAgent(interactive *prompt.Interactive) error {
+	fmt.Println("Let's create a single agent to add to your project.")
+
+	fmt.Println("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+	fmt.Println("🤖 AGENT CONFIGURATION")
+	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+
+	agentName, err := interactive.PromptAgentName(1)
+	if err != nil {
+		return fmt.Errorf("failed to get agent name: %w", err)
+	}
+
+	agentType, err := interactive.PromptAgentType()
+	if err != nil {
+		return fmt.Errorf("failed to get agent type: %w", err)
+	}
+
+	var instruction string
+	if agentType == model.AgentTypeLLM {
+		instruction, err = interactive.PromptAgentInstruction(agentName)
+		if err != nil {
+			return fmt.Errorf("failed to get agent instruction: %w", err)
+		}
+	}
+
+	outputKey, err := interactive.PromptOutputKey()
+	if err != nil {
+		return fmt.Errorf("failed to get output key: %w", err)
+	}
+
+	agentModel, err := interactive.PromptModel(prompt.DefaultModel)
+	if err != nil {
+		return fmt.Errorf("failed to get agent model: %w", err)
+	}
+
+	agent := model.NewAgent(agentName, agentType, instruction, outputKey, agentModel)
+
+	fmt.Println("\n✨ Generating agent...")
+
+	agentFolderName := toSnakeCase(agentName)
+	agentDir := filepath.Join(".", agentFolderName)
+
+	if err := os.MkdirAll(agentDir, 0755); err != nil {
+		return fmt.Errorf("failed to create agent directory: %w", err)
+	}
+
+	gen := generator.NewGenerator()
+	agentPy, err := gen.GenerateSubAgentPy(agent)
+	if err != nil {
+		return fmt.Errorf("failed to generate agent.py: %w", err)
+	}
+
+	if err := os.WriteFile(filepath.Join(agentDir, "agent.py"), []byte(agentPy), 0644); err != nil {
+		return fmt.Errorf("failed to write agent.py: %w", err)
+	}
+
+	fmt.Printf("\n✓ Created %s/\n", agentFolderName)
+	fmt.Println("  └── agent.py")
+
+	fmt.Println("\n💡 To use this agent in your project:")
+	fmt.Println("   1. Import it in your orchestrator's agent.py:")
+	fmt.Printf("      from %s.agent import agent as %s\n", agentFolderName, agentFolderName)
+	fmt.Println()
+	fmt.Println("   2. Add it to your orchestrator's sub_agents list:")
+	fmt.Printf("      sub_agents=[..., %s]\n", agentFolderName)
+	fmt.Println()
+	fmt.Println("📚 Learn more: https://google.github.io/adk-docs/")
 
 	return nil
 }

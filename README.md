@@ -16,15 +16,20 @@ Download the latest release from the [releases page](https://github.com/doji-co/
 
 ## Usage
 
-### Create a New Multi-Agent Project
+### Create Command
 
-Run the interactive CLI to create a new multi-agent system:
+The `create` command offers two options:
 
 ```bash
 agent-builder create
 ```
 
-The CLI will guide you through:
+You'll be prompted to choose:
+
+#### Option 1: Starter Project
+
+Creates a complete multi-agent system from scratch. The CLI guides you through:
+
 1. **Project name** - Name for your multi-agent project
 2. **Orchestrator details** - The root agent that coordinates sub-agents
    - Name
@@ -38,8 +43,7 @@ The CLI will guide you through:
    - Output key
    - Model
 
-### Generated Project Structure
-
+**Generated structure:**
 ```
 your-project/
 ├── orchestrator_name/
@@ -53,10 +57,7 @@ your-project/
 └── README.md          # Project documentation
 ```
 
-### Running Your Agent
-
-After creating your project:
-
+**Running your project:**
 ```bash
 cd your-project
 pip install -r requirements.txt
@@ -66,6 +67,34 @@ python main.py "Your prompt here"
 
 # Or use ADK web interface
 adk web
+```
+
+#### Option 2: Single Agent
+
+Creates a single agent folder in the current directory. Perfect for adding new sub-agents to an existing project.
+
+The CLI prompts for:
+- Agent name
+- Agent type (LLM or Tool)
+- Instruction
+- Output key
+- Model selection
+
+**Generated structure:**
+```
+./agent_name/
+└── agent.py
+```
+
+**To use the agent in your project:**
+```python
+# In your orchestrator's agent.py
+from agent_name.agent import agent as agent_name
+
+agent = SequentialAgent(
+    name="YourOrchestrator",
+    sub_agents=[..., agent_name],  # Add the new agent
+)
 ```
 
 ### Check Version

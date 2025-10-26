@@ -13,6 +13,35 @@ func NewInteractive() *Interactive {
 	return &Interactive{}
 }
 
+func (i *Interactive) PromptProjectType() (string, error) {
+	fmt.Println("\n💡 What would you like to create?")
+	fmt.Println("   • Starter Project: Complete multi-agent system with orchestrator and sub-agents")
+	fmt.Println("     Use this when starting a new ADK project from scratch")
+	fmt.Println()
+	fmt.Println("   • Single Agent: Just one agent folder to add to an existing project")
+	fmt.Println("     Use this when you want to add a new sub-agent to a project you already have")
+	fmt.Println()
+
+	var selection string
+	prompt := &survey.Select{
+		Message: "What would you like to create?",
+		Options: []string{
+			"Starter project (orchestrator + sub-agents)",
+			"Single agent (add to existing project)",
+		},
+		Help: "Choose based on whether you're starting fresh or extending an existing project",
+	}
+	err := survey.AskOne(prompt, &selection)
+	if err != nil {
+		return "", err
+	}
+
+	if selection == "Starter project (orchestrator + sub-agents)" {
+		return "full", nil
+	}
+	return "single", nil
+}
+
 func (i *Interactive) PromptProjectName() (string, error) {
 	fmt.Println("\n💡 What is a project?")
 	fmt.Println("   A project is a complete multi-agent system. It will contain all your agents")
