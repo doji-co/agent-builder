@@ -1,5 +1,5 @@
 import sys
-from agent import root_agent
+from {{ snakeCase .Orchestrator.Name }}.agent import agent as root_agent
 
 def main():
     if len(sys.argv) < 2:

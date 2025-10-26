@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/doji-co/agent-builder/internal/generator"
 	"github.com/doji-co/agent-builder/internal/model"
@@ -116,6 +117,10 @@ func runCreate(cmd *cobra.Command, args []string) error {
 
 	project := model.NewProject(projectName, orchestrator)
 
+	fmt.Println("\n💡 Project location:")
+	fmt.Printf("   Your project will be created at: ./%s/\n", projectName)
+	fmt.Println()
+
 	outputDir, err := interactive.PromptOutputDirectory(project.OutputDir)
 	if err != nil {
 		return fmt.Errorf("failed to get output directory: %w", err)
@@ -151,7 +156,12 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("\n✓ Created %s/\n", project.OutputDir)
-	fmt.Println("  ├── agent.py           # Agent definitions")
+	fmt.Printf("  ├── %s/\n", toSnakeCase(orchestrator.Name))
+	fmt.Println("  │   └── agent.py       # Orchestrator")
+	for _, agent := range orchestrator.SubAgents {
+		fmt.Printf("  ├── %s/\n", toSnakeCase(agent.Name))
+		fmt.Println("  │   └── agent.py       # Sub-agent")
+	}
 	if project.AddExample {
 		fmt.Println("  ├── main.py            # Example usage")
 	}
@@ -163,9 +173,15 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	fmt.Println("\n🚀 Next steps:")
 	fmt.Printf("  cd %s\n", project.OutputDir)
 	fmt.Println("  pip install -r requirements.txt")
+	fmt.Println()
+	fmt.Println("  # Run with Python:")
 	if project.AddExample {
 		fmt.Println("  python main.py \"Your prompt here\"")
 	}
+	fmt.Println()
+	fmt.Println("  # Or use ADK web interface:")
+	fmt.Println("  adk web")
+	fmt.Println("  # Then open http://localhost:8000 in your browser")
 
 	return nil
 }
@@ -177,12 +193,34 @@ func generateProject(project *model.Project) error {
 
 	gen := generator.NewGenerator()
 
-	agentPy, err := gen.GenerateAgentPy(project)
+	orchFolderName := toSnakeCase(project.Orchestrator.Name)
+	orchDir := filepath.Join(project.OutputDir, orchFolderName)
+	if err := os.MkdirAll(orchDir, 0755); err != nil {
+		return fmt.Errorf("failed to create orchestrator directory: %w", err)
+	}
+
+	orchPy, err := gen.GenerateOrchestratorPy(project.Orchestrator)
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(project.OutputDir, "agent.py"), []byte(agentPy), 0644); err != nil {
-		return fmt.Errorf("failed to write agent.py: %w", err)
+	if err := os.WriteFile(filepath.Join(orchDir, "agent.py"), []byte(orchPy), 0644); err != nil {
+		return fmt.Errorf("failed to write orchestrator agent.py: %w", err)
+	}
+
+	for _, agent := range project.Orchestrator.SubAgents {
+		agentFolderName := toSnakeCase(agent.Name)
+		agentDir := filepath.Join(project.OutputDir, agentFolderName)
+		if err := os.MkdirAll(agentDir, 0755); err != nil {
+			return fmt.Errorf("failed to create sub-agent directory: %w", err)
+		}
+
+		agentPy, err := gen.GenerateSubAgentPy(agent)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(agentDir, "agent.py"), []byte(agentPy), 0644); err != nil {
+			return fmt.Errorf("failed to write sub-agent agent.py: %w", err)
+		}
 	}
 
 	if project.AddExample {
@@ -214,4 +252,16 @@ func generateProject(project *model.Project) error {
 	}
 
 	return nil
+}
+
+func toSnakeCase(s string) string {
+	s = strings.ReplaceAll(s, "-", "_")
+	var result strings.Builder
+	for i, r := range s {
+		if i > 0 && r >= 'A' && r <= 'Z' {
+			result.WriteRune('_')
+		}
+		result.WriteRune(r)
+	}
+	return strings.ToLower(result.String())
 }

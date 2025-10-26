@@ -70,7 +70,7 @@ func TestGenerator_GenerateMainPy(t *testing.T) {
 	t.Logf("Generated main.py:\n%s", content)
 
 	expectedStrings := []string{
-		"from agent import root_agent",
+		"from coordinator.agent import agent as root_agent",
 		"root_agent.run(",
 		`if __name__ == "__main__":`,
 	}
@@ -200,5 +200,72 @@ func TestGenerator_GenerateAgentPy_WithHyphens(t *testing.T) {
 
 	if !strings.Contains(content, `name="grafana-agent"`) {
 		t.Error("GenerateAgentPy() should keep original name in the name field")
+	}
+}
+
+func TestGenerator_GenerateOrchestratorPy(t *testing.T) {
+	orch := model.NewOrchestrator("ResearchCoordinator", model.PatternSequential, "Coordinates research tasks", "gemini-2.0-flash")
+	orch.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash"))
+	orch.AddSubAgent(model.NewAgent("Writer", model.AgentTypeLLM, "Write based on research", "draft", "gemini-2.0-flash"))
+
+	gen := NewGenerator()
+	content, err := gen.GenerateOrchestratorPy(orch)
+
+	if err != nil {
+		t.Fatalf("GenerateOrchestratorPy() error = %v", err)
+	}
+
+	if content == "" {
+		t.Error("GenerateOrchestratorPy() returned empty content")
+	}
+
+	t.Logf("Generated orchestrator:\n%s", content)
+
+	expectedStrings := []string{
+		"from google.adk.agents import SequentialAgent",
+		"from researcher.agent import agent as researcher",
+		"from writer.agent import agent as writer",
+		"agent = SequentialAgent(",
+		`name="ResearchCoordinator"`,
+		"sub_agents=[researcher, writer]",
+		"root_agent = agent",
+	}
+
+	for _, expected := range expectedStrings {
+		if !strings.Contains(content, expected) {
+			t.Errorf("GenerateOrchestratorPy() missing expected string: %s", expected)
+		}
+	}
+}
+
+func TestGenerator_GenerateSubAgentPy(t *testing.T) {
+	agent := model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash")
+
+	gen := NewGenerator()
+	content, err := gen.GenerateSubAgentPy(agent)
+
+	if err != nil {
+		t.Fatalf("GenerateSubAgentPy() error = %v", err)
+	}
+
+	if content == "" {
+		t.Error("GenerateSubAgentPy() returned empty content")
+	}
+
+	t.Logf("Generated sub-agent:\n%s", content)
+
+	expectedStrings := []string{
+		"from google.adk.agents import LlmAgent",
+		"agent = LlmAgent(",
+		`name="Researcher"`,
+		`instruction="Research the topic"`,
+		`output_key="research_data"`,
+		`model="gemini-2.0-flash"`,
+	}
+
+	for _, expected := range expectedStrings {
+		if !strings.Contains(content, expected) {
+			t.Errorf("GenerateSubAgentPy() missing expected string: %s", expected)
+		}
 	}
 }

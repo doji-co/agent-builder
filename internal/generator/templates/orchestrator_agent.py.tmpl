@@ -1,0 +1,19 @@
+from google.adk.agents import {{ getAgentClass .Pattern }}
+{{- range .SubAgents }}
+from {{ snakeCase .Name }}.agent import agent as {{ snakeCase .Name }}
+{{- end }}
+
+agent = {{ getAgentClass .Pattern }}(
+    name="{{ .Name }}",
+    {{- if ne .Pattern.String "Sequential" }}
+    {{- if ne .Pattern.String "Parallel" }}
+    model="{{ .Model }}",
+    {{- end }}
+    {{- end }}
+    {{- if .Description }}
+    description="{{ .Description }}",
+    {{- end }}
+    sub_agents=[{{ range $i, $agent := .SubAgents }}{{ if $i }}, {{ end }}{{ snakeCase $agent.Name }}{{ end }}],
+)
+
+root_agent = agent

@@ -21,21 +21,35 @@ pip install -r requirements.txt
 
 ## Usage
 
+### Option 1: Run with Python
+
 ```bash
 python main.py "Your prompt here"
 ```
 
-### Example
-
+Example:
 ```bash
 python main.py "Research the latest trends in artificial intelligence"
 ```
+
+### Option 2: Use ADK Web Interface
+
+```bash
+adk web
+```
+
+Then open http://localhost:8000 in your browser to interact with your agent through a visual interface.
 
 ## Project Structure
 
 ```
 {{ .Name }}/
-├── agent.py           # Agent definitions
+├── {{ snakeCase .Orchestrator.Name }}/
+│   └── agent.py       # Orchestrator agent
+{{- range .Orchestrator.SubAgents }}
+├── {{ snakeCase .Name }}/
+│   └── agent.py       # {{ .Name }} sub-agent
+{{- end }}
 ├── main.py            # Entry point
 ├── requirements.txt   # Python dependencies
 └── README.md          # This file

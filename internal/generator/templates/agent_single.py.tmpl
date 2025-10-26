@@ -1,0 +1,10 @@
+from google.adk.agents import LlmAgent
+
+agent = LlmAgent(
+    name="{{ .Name }}",
+    model="{{ .Model }}",
+    instruction="{{ .Instruction }}",
+    {{- if .OutputKey }}
+    output_key="{{ .OutputKey }}",
+    {{- end }}
+)

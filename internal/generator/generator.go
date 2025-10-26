@@ -39,6 +39,24 @@ func (g *Generator) GenerateAgentPy(project *model.Project) (string, error) {
 	return buf.String(), nil
 }
 
+func (g *Generator) GenerateOrchestratorPy(orchestrator *model.Orchestrator) (string, error) {
+	var buf bytes.Buffer
+	err := g.templates.ExecuteTemplate(&buf, "orchestrator_agent.py.tmpl", orchestrator)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate orchestrator agent.py: %w", err)
+	}
+	return buf.String(), nil
+}
+
+func (g *Generator) GenerateSubAgentPy(agent *model.Agent) (string, error) {
+	var buf bytes.Buffer
+	err := g.templates.ExecuteTemplate(&buf, "agent_single.py.tmpl", agent)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate sub-agent agent.py: %w", err)
+	}
+	return buf.String(), nil
+}
+
 func (g *Generator) GenerateMainPy(project *model.Project) (string, error) {
 	var buf bytes.Buffer
 	err := g.templates.ExecuteTemplate(&buf, "main.py.tmpl", project)
