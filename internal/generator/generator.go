@@ -67,6 +67,8 @@ func (g *Generator) GenerateReadme(project *model.Project) (string, error) {
 }
 
 func toSnakeCase(s string) string {
+	s = strings.ReplaceAll(s, "-", "_")
+
 	var result strings.Builder
 	for i, r := range s {
 		if i > 0 && r >= 'A' && r <= 'Z' {

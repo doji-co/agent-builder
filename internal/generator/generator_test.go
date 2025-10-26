@@ -169,3 +169,36 @@ func TestGenerator_GenerateAgentsPy_LoopPattern(t *testing.T) {
 		t.Error("GenerateAgentsPy() should use LoopAgent for loop pattern")
 	}
 }
+
+func TestGenerator_GenerateAgentsPy_WithHyphens(t *testing.T) {
+	orch := model.NewOrchestrator("APICoordinator", model.PatternSequential, "Coordinates API tasks", "gemini-2.0-flash")
+	orch.AddSubAgent(model.NewAgent("grafana-agent", model.AgentTypeLLM, "Query Grafana", "grafana_data", "gemini-2.0-flash"))
+	orch.AddSubAgent(model.NewAgent("data-processor", model.AgentTypeLLM, "Process data", "processed", "gemini-2.0-flash"))
+
+	project := model.NewProject("api-project", orch)
+
+	gen := NewGenerator()
+	content, err := gen.GenerateAgentsPy(project)
+
+	if err != nil {
+		t.Fatalf("GenerateAgentsPy() error = %v", err)
+	}
+
+	t.Logf("Generated content:\n%s", content)
+
+	if strings.Contains(content, "grafana-agent = ") {
+		t.Error("GenerateAgentsPy() should not create Python variables with hyphens")
+	}
+
+	if !strings.Contains(content, "grafana_agent = ") {
+		t.Error("GenerateAgentsPy() should convert hyphens to underscores in variable names")
+	}
+
+	if !strings.Contains(content, "data_processor = ") {
+		t.Error("GenerateAgentsPy() should convert hyphens to underscores in variable names")
+	}
+
+	if !strings.Contains(content, `name="grafana-agent"`) {
+		t.Error("GenerateAgentsPy() should keep original name in the name field")
+	}
+}

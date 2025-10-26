@@ -71,6 +71,16 @@ func TestValidateAgentName(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:    "valid with underscores",
+			input:   "My_Agent",
+			wantErr: false,
+		},
+		{
+			name:    "valid with hyphens",
+			input:   "grafana-agent",
+			wantErr: false,
+		},
+		{
 			name:    "empty name",
 			input:   "",
 			wantErr: true,
