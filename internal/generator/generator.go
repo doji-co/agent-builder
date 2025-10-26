@@ -30,11 +30,11 @@ func NewGenerator() *Generator {
 	}
 }
 
-func (g *Generator) GenerateAgentsPy(project *model.Project) (string, error) {
+func (g *Generator) GenerateAgentPy(project *model.Project) (string, error) {
 	var buf bytes.Buffer
-	err := g.templates.ExecuteTemplate(&buf, "agents.py.tmpl", project)
+	err := g.templates.ExecuteTemplate(&buf, "agent.py.tmpl", project)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate agents.py: %w", err)
+		return "", fmt.Errorf("failed to generate agent.py: %w", err)
 	}
 	return buf.String(), nil
 }

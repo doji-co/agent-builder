@@ -151,7 +151,7 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	}
 
 	fmt.Printf("\n✓ Created %s/\n", project.OutputDir)
-	fmt.Println("  ├── agents.py          # Agent definitions")
+	fmt.Println("  ├── agent.py           # Agent definitions")
 	if project.AddExample {
 		fmt.Println("  ├── main.py            # Example usage")
 	}
@@ -177,12 +177,12 @@ func generateProject(project *model.Project) error {
 
 	gen := generator.NewGenerator()
 
-	agentsPy, err := gen.GenerateAgentsPy(project)
+	agentPy, err := gen.GenerateAgentPy(project)
 	if err != nil {
 		return err
 	}
-	if err := os.WriteFile(filepath.Join(project.OutputDir, "agents.py"), []byte(agentsPy), 0644); err != nil {
-		return fmt.Errorf("failed to write agents.py: %w", err)
+	if err := os.WriteFile(filepath.Join(project.OutputDir, "agent.py"), []byte(agentPy), 0644); err != nil {
+		return fmt.Errorf("failed to write agent.py: %w", err)
 	}
 
 	if project.AddExample {
