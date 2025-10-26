@@ -7,7 +7,13 @@ import (
 	"github.com/doji-co/agent-builder/internal/model"
 )
 
-const DefaultModel = "gemini-2.0-flash"
+const DefaultModel = "gemini-2.5-flash"
+
+var AvailableModels = []string{
+	"gemini-2.5-flash",
+	"gemini-2.5-pro",
+	"gemini-2.5-flash-lite",
+}
 
 var (
 	projectNameRegex = regexp.MustCompile(`^[a-zA-Z0-9_-]+$`)

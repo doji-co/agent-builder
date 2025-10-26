@@ -63,8 +63,6 @@ func runCreate(cmd *cobra.Command, args []string) error {
 	fmt.Println("🤖 SUB-AGENTS CONFIGURATION")
 	fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
 
-	fmt.Println("Let's add sub-agents. The orchestrator will manage these agents.")
-
 	agentNumber := 1
 	for {
 		agentName, err := interactive.PromptAgentName(agentNumber)
