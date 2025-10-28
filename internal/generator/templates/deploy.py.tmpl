@@ -1,0 +1,65 @@
+#!/usr/bin/env python3
+"""Minimal agent deployment to Vertex AI for {{ .Name }}."""
+
+import argparse
+import sys
+import vertexai
+from vertexai import agent_engines
+
+
+def deploy_agent(project_id, region, agent_name, staging_bucket):
+    """Deploy agent to Vertex AI."""
+    print(f"Deploying {agent_name} to {project_id}...")
+
+    vertexai.init(
+        project=project_id,
+        location=region,
+        staging_bucket=staging_bucket
+    )
+
+    from {{ snakeCase .Orchestrator.Name }}.agent import root_agent
+
+    deployed = agent_engines.create(
+        agent_engine=root_agent,
+        display_name=agent_name,
+        requirements="requirements.txt",
+        extra_packages=[
+            {{- range .Orchestrator.SubAgents }}
+            "./{{ snakeCase .Name }}",
+            {{- end }}
+            "./{{ snakeCase .Orchestrator.Name }}",
+        ],
+    )
+
+    print(f"✓ Deployed: {deployed.resource_name}")
+    return deployed
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Deploy {{ .Name }} to Vertex AI")
+    parser.add_argument("--project-id", required=True, help="GCP project ID")
+    parser.add_argument("--region", default="us-central1", help="GCP region")
+    parser.add_argument("--agent-name", required=True, help="Agent display name")
+    parser.add_argument("--staging-bucket", required=True, help="Staging bucket (gs://...)")
+
+    args = parser.parse_args()
+
+    staging_bucket = args.staging_bucket
+    if not staging_bucket.startswith("gs://"):
+        staging_bucket = f"gs://{staging_bucket}"
+
+    try:
+        deploy_agent(
+            project_id=args.project_id,
+            region=args.region,
+            agent_name=args.agent_name,
+            staging_bucket=staging_bucket
+        )
+        return 0
+    except Exception as e:
+        print(f"❌ Deployment failed: {e}")
+        return 1
+
+
+if __name__ == "__main__":
+    sys.exit(main())

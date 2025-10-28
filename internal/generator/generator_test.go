@@ -269,3 +269,57 @@ func TestGenerator_GenerateSubAgentPy(t *testing.T) {
 		}
 	}
 }
+
+func TestGenerator_GenerateDeployPy(t *testing.T) {
+	orch := model.NewOrchestrator("IncidentResponseOrchestrator", model.PatternSequential, "Manages incident response", "gemini-2.0-flash")
+	orch.AddSubAgent(model.NewAgent("elastic-agent", model.AgentTypeLLM, "Query Elasticsearch", "elastic_data", "gemini-2.0-flash"))
+	orch.AddSubAgent(model.NewAgent("coding-agent", model.AgentTypeLLM, "Write code fixes", "code", "gemini-2.0-flash"))
+
+	project := model.NewProject("incident-response", orch)
+
+	gen := NewGenerator()
+	content, err := gen.GenerateDeployPy(project)
+
+	if err != nil {
+		t.Fatalf("GenerateDeployPy() error = %v", err)
+	}
+
+	if content == "" {
+		t.Error("GenerateDeployPy() returned empty content")
+	}
+
+	t.Logf("Generated deploy.py:\n%s", content)
+
+	expectedStrings := []string{
+		"#!/usr/bin/env python3",
+		"Deploy incident-response",
+		"from incident_response_orchestrator.agent import root_agent",
+		`"./elastic_agent"`,
+		`"./coding_agent"`,
+		`"./incident_response_orchestrator"`,
+		"--project-id",
+		"--region",
+		"--agent-name",
+		"--staging-bucket",
+		"vertexai.init(",
+		"agent_engines.create(",
+	}
+
+	for _, expected := range expectedStrings {
+		if !strings.Contains(content, expected) {
+			t.Errorf("GenerateDeployPy() missing expected string: %s", expected)
+		}
+	}
+
+	unexpectedStrings := []string{
+		"--env",
+		"ENVIRONMENTS",
+		`choices=["dev", "stg", "prd"]`,
+	}
+
+	for _, unexpected := range unexpectedStrings {
+		if strings.Contains(content, unexpected) {
+			t.Errorf("GenerateDeployPy() should not contain: %s", unexpected)
+		}
+	}
+}

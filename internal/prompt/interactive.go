@@ -53,7 +53,7 @@ func (i *Interactive) PromptProjectName() (string, error) {
 		Message: "Project name?",
 		Help:    "Example: research-assistant, data-processor, content-generator",
 	}
-	err := survey.AskOne(prompt, &name, survey.WithValidator(func(val interface{}) error {
+	err := survey.AskOne(prompt, &name, survey.WithValidator(func(val any) error {
 		if str, ok := val.(string); ok {
 			return ValidateProjectName(str)
 		}
@@ -113,7 +113,7 @@ func (i *Interactive) PromptOrchestratorName() (string, error) {
 		Message: "Orchestrator name?",
 		Help:    "This will be the main agent that controls your system",
 	}
-	err := survey.AskOne(prompt, &name, survey.WithValidator(func(val interface{}) error {
+	err := survey.AskOne(prompt, &name, survey.WithValidator(func(val any) error {
 		if str, ok := val.(string); ok {
 			return ValidateAgentName(str)
 		}
@@ -170,7 +170,7 @@ func (i *Interactive) PromptAgentName(agentNumber int) (string, error) {
 		Message: fmt.Sprintf("Sub-agent #%d name?", agentNumber),
 		Help:    "What specific task will this agent perform?",
 	}
-	err := survey.AskOne(prompt, &name, survey.WithValidator(func(val interface{}) error {
+	err := survey.AskOne(prompt, &name, survey.WithValidator(func(val any) error {
 		if str, ok := val.(string); ok {
 			return ValidateAgentName(str)
 		}
