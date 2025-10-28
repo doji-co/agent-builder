@@ -6,22 +6,24 @@ import (
 )
 
 type Project struct {
-	Name          string
-	Orchestrator  *Orchestrator
-	OutputDir     string
-	AddExample    bool
-	AddReadme     bool
-	AddDocker     bool
+	Name         string
+	Orchestrator *Orchestrator
+	OutputDir    string
+	AddExample   bool
+	AddReadme    bool
+	AddDocker    bool
+	AddDeploy    bool
 }
 
 func NewProject(name string, orchestrator *Orchestrator) *Project {
 	return &Project{
-		Name:          name,
-		Orchestrator:  orchestrator,
-		OutputDir:     fmt.Sprintf("./%s", name),
-		AddExample:    true,
-		AddReadme:     true,
-		AddDocker:     false,
+		Name:         name,
+		Orchestrator: orchestrator,
+		OutputDir:    fmt.Sprintf("./%s", name),
+		AddExample:   true,
+		AddReadme:    true,
+		AddDocker:    false,
+		AddDeploy:    true,
 	}
 }
 

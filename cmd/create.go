@@ -179,6 +179,9 @@ func runCreateFullProject(interactive *prompt.Interactive) error {
 		fmt.Println("  ├── main.py            # Example usage")
 	}
 	fmt.Println("  ├── requirements.txt   # Dependencies (google-adk)")
+	if project.AddDeploy {
+		fmt.Println("  ├── deploy.py          # Vertex AI deployment script")
+	}
 	if project.AddReadme {
 		fmt.Println("  └── README.md          # Documentation")
 	}
@@ -332,6 +335,16 @@ func generateProject(project *model.Project) error {
 		}
 		if err := os.WriteFile(filepath.Join(project.OutputDir, "README.md"), []byte(readme), 0644); err != nil {
 			return fmt.Errorf("failed to write README.md: %w", err)
+		}
+	}
+
+	if project.AddDeploy {
+		deployPy, err := gen.GenerateDeployPy(project)
+		if err != nil {
+			return err
+		}
+		if err := os.WriteFile(filepath.Join(project.OutputDir, "deploy.py"), []byte(deployPy), 0755); err != nil {
+			return fmt.Errorf("failed to write deploy.py: %w", err)
 		}
 	}
 
