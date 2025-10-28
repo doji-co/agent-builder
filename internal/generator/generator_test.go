@@ -299,15 +299,26 @@ func TestGenerator_GenerateDeployPy(t *testing.T) {
 		`"./incident_response_orchestrator"`,
 		"--project-id",
 		"--region",
-		"--agent-name",
 		"--staging-bucket",
 		"vertexai.init(",
 		"agent_engines.create(",
+		`agent_name = "incident-response"`,
 	}
 
 	for _, expected := range expectedStrings {
 		if !strings.Contains(content, expected) {
 			t.Errorf("GenerateDeployPy() missing expected string: %s", expected)
+		}
+	}
+
+	unexpectedAgentNameFlag := []string{
+		"--agent-name",
+		"args.agent_name",
+	}
+
+	for _, unexpected := range unexpectedAgentNameFlag {
+		if strings.Contains(content, unexpected) {
+			t.Errorf("GenerateDeployPy() should not contain agent-name flag: %s", unexpected)
 		}
 	}
 

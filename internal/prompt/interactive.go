@@ -284,3 +284,68 @@ func (i *Interactive) PromptAddDocker() (bool, error) {
 	err := survey.AskOne(prompt, &add)
 	return add, err
 }
+
+func (i *Interactive) PromptUseGcloudValue(valueType, value string) (bool, error) {
+	var use bool
+	prompt := &survey.Confirm{
+		Message: fmt.Sprintf("Use gcloud %s '%s'?", valueType, value),
+		Default: true,
+	}
+	err := survey.AskOne(prompt, &use)
+	return use, err
+}
+
+func (i *Interactive) PromptProjectID() (string, error) {
+	fmt.Println("\n💡 GCP Project ID")
+	fmt.Println("   Your Google Cloud Platform project identifier.")
+	fmt.Println("   Example: my-gcp-project-123456")
+	fmt.Println()
+
+	var projectID string
+	prompt := &survey.Input{
+		Message: "Enter GCP project ID:",
+		Help:    "You can find this in the GCP Console",
+	}
+	err := survey.AskOne(prompt, &projectID, survey.WithValidator(survey.Required))
+	return projectID, err
+}
+
+func (i *Interactive) PromptRegion() (string, error) {
+	fmt.Println("\n💡 GCP Region")
+	fmt.Println("   The geographic location where your agent will be deployed.")
+	fmt.Println()
+	fmt.Println("   📍 Common regions:")
+	fmt.Println("   • us-central1 (Iowa)")
+	fmt.Println("   • us-east1 (South Carolina)")
+	fmt.Println("   • europe-west1 (Belgium)")
+	fmt.Println("   • asia-east1 (Taiwan)")
+	fmt.Println()
+
+	var region string
+	prompt := &survey.Input{
+		Message: "Enter GCP region:",
+		Default: "us-central1",
+		Help:    "Choose a region close to your users for better performance",
+	}
+	err := survey.AskOne(prompt, &region)
+	if region == "" {
+		region = "us-central1"
+	}
+	return region, err
+}
+
+func (i *Interactive) PromptStagingBucket() (string, error) {
+	fmt.Println("\n💡 Staging Bucket")
+	fmt.Println("   A Google Cloud Storage bucket where your agent code will be staged.")
+	fmt.Println("   Format: gs://your-bucket-name")
+	fmt.Println()
+
+	var bucket string
+	prompt := &survey.Input{
+		Message: "Enter GCS staging bucket:",
+		Default: "gs://",
+		Help:    "Example: gs://my-agent-staging",
+	}
+	err := survey.AskOne(prompt, &bucket, survey.WithValidator(survey.Required))
+	return bucket, err
+}

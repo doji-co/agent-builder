@@ -7,8 +7,9 @@ import vertexai
 from vertexai import agent_engines
 
 
-def deploy_agent(project_id, region, agent_name, staging_bucket):
+def deploy_agent(project_id, region, staging_bucket):
     """Deploy agent to Vertex AI."""
+    agent_name = "{{ .Name }}"
     print(f"Deploying {agent_name} to {project_id}...")
 
     vertexai.init(
@@ -39,7 +40,6 @@ def main():
     parser = argparse.ArgumentParser(description="Deploy {{ .Name }} to Vertex AI")
     parser.add_argument("--project-id", required=True, help="GCP project ID")
     parser.add_argument("--region", default="us-central1", help="GCP region")
-    parser.add_argument("--agent-name", required=True, help="Agent display name")
     parser.add_argument("--staging-bucket", required=True, help="Staging bucket (gs://...)")
 
     args = parser.parse_args()
@@ -52,7 +52,6 @@ def main():
         deploy_agent(
             project_id=args.project_id,
             region=args.region,
-            agent_name=args.agent_name,
             staging_bucket=staging_bucket
         )
         return 0
