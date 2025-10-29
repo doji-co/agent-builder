@@ -15,15 +15,17 @@ type Agent struct {
 	Instruction string
 	OutputKey   string
 	Model       string
+	Tools       []AdkTool
 }
 
-func NewAgent(name string, agentType AgentType, instruction, outputKey, model string) *Agent {
+func NewAgent(name string, agentType AgentType, instruction, outputKey, model string, adkTools []AdkTool) *Agent {
 	return &Agent{
 		Name:        name,
 		Type:        agentType,
 		Instruction: instruction,
 		OutputKey:   outputKey,
 		Model:       model,
+		Tools:       adkTools,
 	}
 }
 

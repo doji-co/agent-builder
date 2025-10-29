@@ -48,7 +48,7 @@ func TestNewAgent(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := NewAgent(tt.agentName, tt.agentType, tt.instruction, tt.outputKey, tt.model)
+			got := NewAgent(tt.agentName, tt.agentType, tt.instruction, tt.outputKey, tt.model, nil)
 
 			if got.Name != tt.want.Name {
 				t.Errorf("Name = %v, want %v", got.Name, tt.want.Name)

@@ -90,6 +90,7 @@ func runCreateFullProject(interactive *prompt.Interactive) error {
 		}
 
 		var instruction string
+		var adkTools []model.AdkTool
 		if agentType == model.AgentTypeLLM {
 			instruction, err = interactive.PromptAgentInstruction(agentName)
 			if err != nil {
@@ -107,7 +108,21 @@ func runCreateFullProject(interactive *prompt.Interactive) error {
 			return fmt.Errorf("failed to get agent model: %w", err)
 		}
 
-		agent := model.NewAgent(agentName, agentType, instruction, outputKey, agentModel)
+		if agentType == model.AgentTypeLLM {
+			addTools, err := interactive.PromptAddAdkTools()
+			if err != nil {
+				return fmt.Errorf("failed to prompt for ADK tools: %w", err)
+			}
+
+			if addTools {
+				adkTools, err = interactive.PromptAdkTools()
+				if err != nil {
+					return fmt.Errorf("failed to get ADK tools: %w", err)
+				}
+			}
+		}
+
+		agent := model.NewAgent(agentName, agentType, instruction, outputKey, agentModel, adkTools)
 		orchestrator.AddSubAgent(agent)
 
 		fmt.Printf("\n✓ Sub-agent \"%s\" added to %s\n\n", agentName, orchName)
@@ -217,6 +232,7 @@ func runCreateSingleAgent(interactive *prompt.Interactive) error {
 	}
 
 	var instruction string
+	var adkTools []model.AdkTool
 	if agentType == model.AgentTypeLLM {
 		instruction, err = interactive.PromptAgentInstruction(agentName)
 		if err != nil {
@@ -234,7 +250,21 @@ func runCreateSingleAgent(interactive *prompt.Interactive) error {
 		return fmt.Errorf("failed to get agent model: %w", err)
 	}
 
-	agent := model.NewAgent(agentName, agentType, instruction, outputKey, agentModel)
+	if agentType == model.AgentTypeLLM {
+		addTools, err := interactive.PromptAddAdkTools()
+		if err != nil {
+			return fmt.Errorf("failed to prompt for ADK tools: %w", err)
+		}
+
+		if addTools {
+			adkTools, err = interactive.PromptAdkTools()
+			if err != nil {
+				return fmt.Errorf("failed to get ADK tools: %w", err)
+			}
+		}
+	}
+
+	agent := model.NewAgent(agentName, agentType, instruction, outputKey, agentModel, adkTools)
 
 	fmt.Println("\n✨ Generating agent...")
 

@@ -284,3 +284,50 @@ func (i *Interactive) PromptAddDocker() (bool, error) {
 	err := survey.AskOne(prompt, &add)
 	return add, err
 }
+
+func (i *Interactive) PromptAddAdkTools() (bool, error) {
+	fmt.Println("\n💡 What are ADK Tools?")
+	fmt.Println("   ADK Tools are built-in integrations provided by Google ADK that extend agent capabilities.")
+	fmt.Println("   Examples include Google Search, Code Execution, BigQuery, Cloud Spanner, and more.")
+	fmt.Println()
+
+	var add bool
+	prompt := &survey.Confirm{
+		Message: "Add ADK tools to this agent?",
+		Default: true,
+	}
+	err := survey.AskOne(prompt, &add)
+	return add, err
+}
+
+func (i *Interactive) PromptAdkTools() ([]model.AdkTool, error) {
+	tools := model.GetAllAdkTools()
+
+	options := make([]string, len(tools))
+	for idx, tool := range tools {
+		options[idx] = fmt.Sprintf("%s - %s", tool, model.GetAdkToolDescription(tool))
+	}
+
+	var selections []string
+	prompt := &survey.MultiSelect{
+		Message: "Select ADK tools (use space to select, enter to confirm):",
+		Options: options,
+		Help:    "Choose the tools this agent needs to accomplish its tasks",
+	}
+	err := survey.AskOne(prompt, &selections)
+	if err != nil {
+		return nil, err
+	}
+
+	selectedTools := make([]model.AdkTool, 0, len(selections))
+	for _, selection := range selections {
+		for idx, opt := range options {
+			if opt == selection {
+				selectedTools = append(selectedTools, tools[idx])
+				break
+			}
+		}
+	}
+
+	return selectedTools, nil
+}

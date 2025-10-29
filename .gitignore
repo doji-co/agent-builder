@@ -28,3 +28,7 @@ agent-builder
 # OS
 .DS_Store
 Thumbs.db
+
+# Workflow artifacts
+agent-test/
+

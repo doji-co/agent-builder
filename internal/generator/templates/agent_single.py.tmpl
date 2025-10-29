@@ -1,4 +1,7 @@
 from google.adk.agents import LlmAgent
+{{- if hasTools . }}
+from google.adk.tools import {{ getToolImports . }}
+{{- end }}
 
 agent = LlmAgent(
     name="{{ snakeCase .Name }}",
@@ -6,5 +9,8 @@ agent = LlmAgent(
     instruction="{{ .Instruction }}",
     {{- if .OutputKey }}
     output_key="{{ .OutputKey }}",
+    {{- end }}
+    {{- if hasTools . }}
+    tools=[{{ getToolsList . }}],
     {{- end }}
 )
