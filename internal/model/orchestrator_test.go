@@ -68,8 +68,8 @@ func TestNewOrchestrator(t *testing.T) {
 
 func TestOrchestrator_AddSubAgent(t *testing.T) {
 	orch := NewOrchestrator("Coordinator", PatternSequential, "Test", "gemini-2.0-flash")
-	agent1 := NewAgent("Agent1", AgentTypeLLM, "Do task 1", "result1", "gemini-2.0-flash")
-	agent2 := NewAgent("Agent2", AgentTypeLLM, "Do task 2", "result2", "gemini-2.0-flash")
+	agent1 := NewAgent("Agent1", AgentTypeLLM, "Do task 1", "result1", "gemini-2.0-flash", nil)
+	agent2 := NewAgent("Agent2", AgentTypeLLM, "Do task 2", "result2", "gemini-2.0-flash", nil)
 
 	orch.AddSubAgent(agent1)
 	if len(orch.SubAgents) != 1 {
@@ -100,7 +100,7 @@ func TestOrchestrator_Validate(t *testing.T) {
 			name: "valid orchestrator with agents",
 			setup: func() *Orchestrator {
 				orch := NewOrchestrator("Coordinator", PatternSequential, "Test", "gemini-2.0-flash")
-				orch.AddSubAgent(NewAgent("Agent1", AgentTypeLLM, "Task", "result", "gemini-2.0-flash"))
+				orch.AddSubAgent(NewAgent("Agent1", AgentTypeLLM, "Task", "result", "gemini-2.0-flash", nil))
 				return orch
 			},
 			wantErr: false,
@@ -125,7 +125,7 @@ func TestOrchestrator_Validate(t *testing.T) {
 			name: "invalid sub-agent returns error",
 			setup: func() *Orchestrator {
 				orch := NewOrchestrator("Coordinator", PatternSequential, "Test", "gemini-2.0-flash")
-				orch.AddSubAgent(NewAgent("", AgentTypeLLM, "Task", "result", "gemini-2.0-flash"))
+				orch.AddSubAgent(NewAgent("", AgentTypeLLM, "Task", "result", "gemini-2.0-flash", nil))
 				return orch
 			},
 			wantErr: true,

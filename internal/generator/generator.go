@@ -19,10 +19,13 @@ type Generator struct {
 
 func NewGenerator() *Generator {
 	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
-		"lower":          strings.ToLower,
-		"snakeCase":      toSnakeCase,
-		"getAgentClass":  getAgentClass,
-		"getImports":     getImports,
+		"lower":           strings.ToLower,
+		"snakeCase":       toSnakeCase,
+		"getAgentClass":   getAgentClass,
+		"getImports":      getImports,
+		"getToolImports":  getToolImports,
+		"hasTools":        hasTools,
+		"getToolsList":    getToolsList,
 	}).ParseFS(templatesFS, "templates/*.tmpl"))
 
 	return &Generator{
@@ -121,4 +124,39 @@ func getImports(project *model.Project) string {
 	}
 
 	return strings.Join(imports, ", ")
+}
+
+func getToolImports(agent *model.Agent) string {
+	if len(agent.Tools) == 0 {
+		return ""
+	}
+
+	toolSet := make(map[string]bool)
+	for _, tool := range agent.Tools {
+		toolSet[string(tool)] = true
+	}
+
+	tools := make([]string, 0, len(toolSet))
+	for tool := range toolSet {
+		tools = append(tools, tool)
+	}
+
+	return strings.Join(tools, ", ")
+}
+
+func hasTools(agent *model.Agent) bool {
+	return len(agent.Tools) > 0
+}
+
+func getToolsList(agent *model.Agent) string {
+	if len(agent.Tools) == 0 {
+		return ""
+	}
+
+	tools := make([]string, len(agent.Tools))
+	for i, tool := range agent.Tools {
+		tools[i] = string(tool)
+	}
+
+	return strings.Join(tools, ", ")
 }
