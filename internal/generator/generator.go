@@ -19,10 +19,10 @@ type Generator struct {
 
 func NewGenerator() *Generator {
 	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
-		"lower":          strings.ToLower,
-		"snakeCase":      toSnakeCase,
-		"getAgentClass":  getAgentClass,
-		"getImports":     getImports,
+		"lower":         strings.ToLower,
+		"snakeCase":     toSnakeCase,
+		"getAgentClass": getAgentClass,
+		"getImports":    getImports,
 	}).ParseFS(templatesFS, "templates/*.tmpl"))
 
 	return &Generator{
@@ -80,6 +80,15 @@ func (g *Generator) GenerateReadme(project *model.Project) (string, error) {
 	err := g.templates.ExecuteTemplate(&buf, "README.md.tmpl", project)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate README.md: %w", err)
+	}
+	return buf.String(), nil
+}
+
+func (g *Generator) GenerateDeployPy(project *model.Project) (string, error) {
+	var buf bytes.Buffer
+	err := g.templates.ExecuteTemplate(&buf, "deploy.py.tmpl", project)
+	if err != nil {
+		return "", fmt.Errorf("failed to generate deploy.py: %w", err)
 	}
 	return buf.String(), nil
 }
