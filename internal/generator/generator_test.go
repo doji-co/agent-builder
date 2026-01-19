@@ -9,8 +9,8 @@ import (
 
 func TestGenerator_GenerateAgentPy(t *testing.T) {
 	orch := model.NewOrchestrator("ResearchCoordinator", model.PatternSequential, "Coordinates research tasks", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash"))
-	orch.AddSubAgent(model.NewAgent("Writer", model.AgentTypeLLM, "Write based on {research_data}", "draft", "gemini-2.0-flash"))
+	orch.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash", nil))
+	orch.AddSubAgent(model.NewAgent("Writer", model.AgentTypeLLM, "Write based on {research_data}", "draft", "gemini-2.0-flash", nil))
 
 	project := model.NewProject("test-project", orch)
 
@@ -52,7 +52,7 @@ func TestGenerator_GenerateAgentPy(t *testing.T) {
 
 func TestGenerator_GenerateMainPy(t *testing.T) {
 	orch := model.NewOrchestrator("Coordinator", model.PatternSequential, "Test", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Agent1", model.AgentTypeLLM, "Task", "result", "gemini-2.0-flash"))
+	orch.AddSubAgent(model.NewAgent("Agent1", model.AgentTypeLLM, "Task", "result", "gemini-2.0-flash", nil))
 
 	project := model.NewProject("test-project", orch)
 
@@ -101,7 +101,7 @@ func TestGenerator_GenerateRequirementsTxt(t *testing.T) {
 
 func TestGenerator_GenerateReadme(t *testing.T) {
 	orch := model.NewOrchestrator("Coordinator", model.PatternSequential, "Test coordinator", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Agent1", model.AgentTypeLLM, "Task", "result", "gemini-2.0-flash"))
+	orch.AddSubAgent(model.NewAgent("Agent1", model.AgentTypeLLM, "Task", "result", "gemini-2.0-flash", nil))
 
 	project := model.NewProject("my-project", orch)
 
@@ -131,8 +131,8 @@ func TestGenerator_GenerateReadme(t *testing.T) {
 
 func TestGenerator_GenerateAgentPy_ParallelPattern(t *testing.T) {
 	orch := model.NewOrchestrator("ParallelCoord", model.PatternParallel, "Parallel tasks", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Task1", model.AgentTypeLLM, "Do task 1", "result1", "gemini-2.0-flash"))
-	orch.AddSubAgent(model.NewAgent("Task2", model.AgentTypeLLM, "Do task 2", "result2", "gemini-2.0-flash"))
+	orch.AddSubAgent(model.NewAgent("Task1", model.AgentTypeLLM, "Do task 1", "result1", "gemini-2.0-flash", nil))
+	orch.AddSubAgent(model.NewAgent("Task2", model.AgentTypeLLM, "Do task 2", "result2", "gemini-2.0-flash", nil))
 
 	project := model.NewProject("parallel-project", orch)
 
@@ -154,7 +154,7 @@ func TestGenerator_GenerateAgentPy_ParallelPattern(t *testing.T) {
 
 func TestGenerator_GenerateAgentPy_LoopPattern(t *testing.T) {
 	orch := model.NewOrchestrator("LoopCoord", model.PatternLoop, "Loop tasks", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Task", model.AgentTypeLLM, "Iterative task", "result", "gemini-2.0-flash"))
+	orch.AddSubAgent(model.NewAgent("Task", model.AgentTypeLLM, "Iterative task", "result", "gemini-2.0-flash", nil))
 
 	project := model.NewProject("loop-project", orch)
 
@@ -172,8 +172,8 @@ func TestGenerator_GenerateAgentPy_LoopPattern(t *testing.T) {
 
 func TestGenerator_GenerateAgentPy_WithHyphens(t *testing.T) {
 	orch := model.NewOrchestrator("APICoordinator", model.PatternSequential, "Coordinates API tasks", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("grafana-agent", model.AgentTypeLLM, "Query Grafana", "grafana_data", "gemini-2.0-flash"))
-	orch.AddSubAgent(model.NewAgent("data-processor", model.AgentTypeLLM, "Process data", "processed", "gemini-2.0-flash"))
+	orch.AddSubAgent(model.NewAgent("grafana-agent", model.AgentTypeLLM, "Query Grafana", "grafana_data", "gemini-2.0-flash", nil))
+	orch.AddSubAgent(model.NewAgent("data-processor", model.AgentTypeLLM, "Process data", "processed", "gemini-2.0-flash", nil))
 
 	project := model.NewProject("api-project", orch)
 
@@ -205,8 +205,8 @@ func TestGenerator_GenerateAgentPy_WithHyphens(t *testing.T) {
 
 func TestGenerator_GenerateOrchestratorPy(t *testing.T) {
 	orch := model.NewOrchestrator("ResearchCoordinator", model.PatternSequential, "Coordinates research tasks", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash"))
-	orch.AddSubAgent(model.NewAgent("Writer", model.AgentTypeLLM, "Write based on research", "draft", "gemini-2.0-flash"))
+	orch.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash", nil))
+	orch.AddSubAgent(model.NewAgent("Writer", model.AgentTypeLLM, "Write based on research", "draft", "gemini-2.0-flash", nil))
 
 	gen := NewGenerator()
 	content, err := gen.GenerateOrchestratorPy(orch)
@@ -239,7 +239,7 @@ func TestGenerator_GenerateOrchestratorPy(t *testing.T) {
 }
 
 func TestGenerator_GenerateSubAgentPy(t *testing.T) {
-	agent := model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash")
+	agent := model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash", nil)
 
 	gen := NewGenerator()
 	content, err := gen.GenerateSubAgentPy(agent)
