@@ -141,3 +141,70 @@ func TestGetAgentTypes(t *testing.T) {
 		}
 	}
 }
+
+func TestValidateOutputKey(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   string
+		wantErr bool
+	}{
+		{
+			name:    "valid output key",
+			input:   "research_notes",
+			wantErr: false,
+		},
+		{
+			name:    "empty output key",
+			input:   "",
+			wantErr: true,
+		},
+		{
+			name:    "output key with hyphen",
+			input:   "research-notes",
+			wantErr: true,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ValidateOutputKey(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("ValidateOutputKey() error = %v, wantErr %v", err, tt.wantErr)
+			}
+		})
+	}
+}
+
+func TestResolveModel(t *testing.T) {
+	tests := []struct {
+		name      string
+		selection string
+		custom    string
+		want      string
+	}{
+		{
+			name:      "uses selected model",
+			selection: "gemini-2.5-pro",
+			want:      "gemini-2.5-pro",
+		},
+		{
+			name:      "uses custom model value",
+			selection: CustomModelOption,
+			custom:    "gemini-pro-latest",
+			want:      "gemini-pro-latest",
+		},
+		{
+			name:      "falls back to default model for empty custom value",
+			selection: CustomModelOption,
+			want:      DefaultModel,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := ResolveModel(tt.selection, tt.custom); got != tt.want {
+				t.Errorf("ResolveModel() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

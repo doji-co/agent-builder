@@ -6,10 +6,21 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var rootCmd = &cobra.Command{
-	Use:   "agent-builder",
-	Short: "ADK Multi-Agent Builder CLI",
-	Long:  "A CLI tool to help build ADK (Agent Development Kit) multi-agent systems.",
+var rootCmd = newRootCommand()
+
+func newRootCommand() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "agent-builder",
+		Short: "ADK Multi-Agent Builder CLI",
+		Long:  "A CLI tool to help build ADK multi-agent systems.",
+	}
+	cmd.CompletionOptions.DisableDefaultCmd = true
+	cmd.AddCommand(
+		newCreateCommand(createDependencies{}),
+		newPatternsCommand(),
+		newVersionCommand(),
+	)
+	return cmd
 }
 
 func Execute() {
@@ -17,8 +28,4 @@ func Execute() {
 	if err != nil {
 		os.Exit(1)
 	}
-}
-
-func init() {
-	rootCmd.CompletionOptions.DisableDefaultCmd = true
 }

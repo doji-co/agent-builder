@@ -32,9 +32,25 @@ func (a *Agent) Validate() error {
 		return errors.New("name cannot be empty")
 	}
 
+	if a.OutputKey == "" {
+		return errors.New("output key cannot be empty")
+	}
+
 	if a.Type == AgentTypeLLM && a.Instruction == "" {
 		return errors.New("instruction is required for LLM agents")
 	}
 
+	if a.Type == AgentTypeLLM && a.Model == "" {
+		return errors.New("model is required for LLM agents")
+	}
+
 	return nil
+}
+
+func (a *Agent) PackageName() string {
+	return normalizeName(a.Name)
+}
+
+func (a *Agent) ClassName() string {
+	return className(a.Name)
 }
