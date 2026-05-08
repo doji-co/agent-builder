@@ -4,7 +4,7 @@ go 1.26.0
 
 require (
 	charm.land/huh/v2 v2.0.3
-	github.com/spf13/cobra v1.10.1
+	github.com/spf13/cobra v1.10.2
 )
 
 require (
