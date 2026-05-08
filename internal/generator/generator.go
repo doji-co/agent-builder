@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"embed"
 	"fmt"
+	"path/filepath"
 	"strings"
 	"text/template"
 
@@ -13,16 +14,22 @@ import (
 //go:embed templates/*
 var templatesFS embed.FS
 
+type File struct {
+	Path    string
+	Content string
+}
+
 type Generator struct {
 	templates *template.Template
 }
 
 func NewGenerator() *Generator {
 	tmpl := template.Must(template.New("").Funcs(template.FuncMap{
-		"lower":          strings.ToLower,
-		"snakeCase":      toSnakeCase,
-		"getAgentClass":  getAgentClass,
-		"getImports":     getImports,
+		"snakeCase":              snakeCase,
+		"className":              className,
+		"getAgentClass":          getAgentClass,
+		"getOrchestratorImports": getOrchestratorImports,
+		"coordinatorInstruction": coordinatorInstruction,
 	}).ParseFS(templatesFS, "templates/*.tmpl"))
 
 	return &Generator{
@@ -30,71 +37,93 @@ func NewGenerator() *Generator {
 	}
 }
 
-func (g *Generator) GenerateAgentPy(project *model.Project) (string, error) {
-	var buf bytes.Buffer
-	err := g.templates.ExecuteTemplate(&buf, "agent.py.tmpl", project)
+func (g *Generator) GenerateProjectFiles(project *model.Project) ([]File, error) {
+	rootPackage := project.PackageName()
+
+	rootAgent, err := g.renderTemplate("root_agent.py.tmpl", project)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate agent.py: %w", err)
+		return nil, err
 	}
-	return buf.String(), nil
-}
 
-func (g *Generator) GenerateOrchestratorPy(orchestrator *model.Orchestrator) (string, error) {
-	var buf bytes.Buffer
-	err := g.templates.ExecuteTemplate(&buf, "orchestrator_agent.py.tmpl", orchestrator)
+	envExample, err := g.renderTemplate("env.example.tmpl", project)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate orchestrator agent.py: %w", err)
+		return nil, err
 	}
-	return buf.String(), nil
-}
 
-func (g *Generator) GenerateSubAgentPy(agent *model.Agent) (string, error) {
-	var buf bytes.Buffer
-	err := g.templates.ExecuteTemplate(&buf, "agent_single.py.tmpl", agent)
+	requirements, err := g.renderTemplate("requirements.txt.tmpl", project)
 	if err != nil {
-		return "", fmt.Errorf("failed to generate sub-agent agent.py: %w", err)
+		return nil, err
 	}
-	return buf.String(), nil
-}
 
-func (g *Generator) GenerateMainPy(project *model.Project) (string, error) {
-	var buf bytes.Buffer
-	err := g.templates.ExecuteTemplate(&buf, "main.py.tmpl", project)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate main.py: %w", err)
+	files := []File{
+		{Path: filepath.Join(rootPackage, "__init__.py"), Content: "from . import agent\n"},
+		{Path: filepath.Join(rootPackage, "agent.py"), Content: rootAgent},
+		{Path: filepath.Join(rootPackage, ".env.example"), Content: envExample},
+		{Path: filepath.Join(rootPackage, "sub_agents", "__init__.py"), Content: ""},
+		{Path: "requirements.txt", Content: requirements},
 	}
-	return buf.String(), nil
-}
 
-func (g *Generator) GenerateRequirementsTxt() (string, error) {
-	var buf bytes.Buffer
-	err := g.templates.ExecuteTemplate(&buf, "requirements.txt.tmpl", nil)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate requirements.txt: %w", err)
-	}
-	return buf.String(), nil
-}
-
-func (g *Generator) GenerateReadme(project *model.Project) (string, error) {
-	var buf bytes.Buffer
-	err := g.templates.ExecuteTemplate(&buf, "README.md.tmpl", project)
-	if err != nil {
-		return "", fmt.Errorf("failed to generate README.md: %w", err)
-	}
-	return buf.String(), nil
-}
-
-func toSnakeCase(s string) string {
-	s = strings.ReplaceAll(s, "-", "_")
-
-	var result strings.Builder
-	for i, r := range s {
-		if i > 0 && r >= 'A' && r <= 'Z' {
-			result.WriteRune('_')
+	if project.AddReadme {
+		readme, err := g.renderTemplate("README.md.tmpl", project)
+		if err != nil {
+			return nil, err
 		}
-		result.WriteRune(r)
+		files = append(files, File{Path: "README.md", Content: readme})
 	}
-	return strings.ToLower(result.String())
+
+	for _, agent := range project.Orchestrator.SubAgents {
+		agentFiles, err := g.generateAgentPackageFiles(filepath.Join(rootPackage, "sub_agents"), agent)
+		if err != nil {
+			return nil, err
+		}
+		files = append(files, agentFiles...)
+	}
+
+	return files, nil
+}
+
+func (g *Generator) GenerateSingleAgentFiles(agent *model.Agent) ([]File, error) {
+	return g.generateAgentPackageFiles(".", agent)
+}
+
+func (g *Generator) generateAgentPackageFiles(baseDir string, agent *model.Agent) ([]File, error) {
+	content, err := g.renderAgentTemplate(agent)
+	if err != nil {
+		return nil, err
+	}
+
+	packageDir := filepath.Join(baseDir, agent.PackageName())
+	return []File{
+		{Path: filepath.Join(packageDir, "__init__.py"), Content: "from .agent import agent\n"},
+		{Path: filepath.Join(packageDir, "agent.py"), Content: content},
+	}, nil
+}
+
+func (g *Generator) renderAgentTemplate(agent *model.Agent) (string, error) {
+	switch agent.Type {
+	case model.AgentTypeLLM:
+		return g.renderTemplate("llm_agent.py.tmpl", agent)
+	case model.AgentTypeCustom:
+		return g.renderTemplate("custom_agent.py.tmpl", agent)
+	default:
+		return "", fmt.Errorf("unsupported agent type: %s", agent.Type)
+	}
+}
+
+func (g *Generator) renderTemplate(name string, data any) (string, error) {
+	var buf bytes.Buffer
+	if err := g.templates.ExecuteTemplate(&buf, name, data); err != nil {
+		return "", fmt.Errorf("failed to generate %s: %w", name, err)
+	}
+	return buf.String(), nil
+}
+
+func snakeCase(name string) string {
+	return model.NewAgent(name, model.AgentTypeCustom, "", "output", "").PackageName()
+}
+
+func className(name string) string {
+	return model.NewAgent(name, model.AgentTypeCustom, "", "output", "").ClassName()
 }
 
 func getAgentClass(pattern model.OrchestrationPattern) string {
@@ -112,13 +141,14 @@ func getAgentClass(pattern model.OrchestrationPattern) string {
 	}
 }
 
-func getImports(project *model.Project) string {
-	imports := []string{"LlmAgent"}
+func getOrchestratorImports(pattern model.OrchestrationPattern) string {
+	return getAgentClass(pattern)
+}
 
-	agentClass := getAgentClass(project.Orchestrator.Pattern)
-	if agentClass != "LlmAgent" {
-		imports = append(imports, agentClass)
+func coordinatorInstruction(orchestrator *model.Orchestrator) string {
+	base := "Coordinate the available sub-agents to solve the user's request. Delegate work to the most appropriate sub-agent and provide a direct final answer to the user."
+	if orchestrator.Description == "" {
+		return base
 	}
-
-	return strings.Join(imports, ", ")
+	return base + "\n\nProject context: " + strings.TrimSpace(orchestrator.Description)
 }

@@ -71,6 +71,10 @@ func (o *Orchestrator) Validate() error {
 		return errors.New("orchestrator name cannot be empty")
 	}
 
+	if o.Pattern == PatternLLMCoordinated && o.Model == "" {
+		return errors.New("model is required for LLM-coordinated orchestrators")
+	}
+
 	if len(o.SubAgents) == 0 {
 		return errors.New("orchestrator must have at least one sub-agent")
 	}
@@ -82,4 +86,8 @@ func (o *Orchestrator) Validate() error {
 	}
 
 	return nil
+}
+
+func (o *Orchestrator) PackageName() string {
+	return normalizeName(o.Name)
 }

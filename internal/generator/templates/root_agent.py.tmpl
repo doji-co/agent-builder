@@ -1,0 +1,19 @@
+from google.adk.agents import {{ getOrchestratorImports .Orchestrator.Pattern }}
+{{- range .Orchestrator.SubAgents }}
+from .sub_agents.{{ snakeCase .Name }} import agent as {{ snakeCase .Name }}
+{{- end }}
+
+root_agent = {{ getAgentClass .Orchestrator.Pattern }}(
+    name="{{ .Orchestrator.PackageName }}",
+    {{- if eq .Orchestrator.Pattern "llm-coordinated" }}
+    model="{{ .Orchestrator.Model }}",
+    instruction="""{{ coordinatorInstruction .Orchestrator }}""",
+    {{- end }}
+    {{- if .Orchestrator.Description }}
+    description="""{{ .Orchestrator.Description }}""",
+    {{- end }}
+    {{- if eq .Orchestrator.Pattern "loop" }}
+    max_iterations=3,
+    {{- end }}
+    sub_agents=[{{ range $i, $agent := .Orchestrator.SubAgents }}{{ if $i }}, {{ end }}{{ snakeCase $agent.Name }}{{ end }}],
+)

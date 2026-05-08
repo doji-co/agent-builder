@@ -1,271 +1,265 @@
 package generator
 
 import (
+	"path/filepath"
 	"strings"
 	"testing"
 
 	"github.com/doji-co/agent-builder/internal/model"
 )
 
-func TestGenerator_GenerateAgentPy(t *testing.T) {
-	orch := model.NewOrchestrator("ResearchCoordinator", model.PatternSequential, "Coordinates research tasks", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash"))
-	orch.AddSubAgent(model.NewAgent("Writer", model.AgentTypeLLM, "Write based on {research_data}", "draft", "gemini-2.0-flash"))
+func TestGenerator_GenerateProjectFiles(t *testing.T) {
+	orchestrator := model.NewOrchestrator("TripCoordinator", model.PatternSequential, "Coordinates travel planning", "gemini-flash-latest")
+	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the destination", "research_notes", "gemini-flash-latest"))
+	orchestrator.AddSubAgent(model.NewAgent("ItineraryBuilder", model.AgentTypeCustom, "", "itinerary", ""))
 
-	project := model.NewProject("test-project", orch)
+	project := model.NewProject("travel-planner", orchestrator)
 
 	gen := NewGenerator()
-	content, err := gen.GenerateAgentPy(project)
-
+	files, err := gen.GenerateProjectFiles(project)
 	if err != nil {
-		t.Fatalf("GenerateAgentPy() error = %v", err)
+		t.Fatalf("GenerateProjectFiles() error = %v", err)
 	}
 
-	if content == "" {
-		t.Error("GenerateAgentPy() returned empty content")
+	expectedPaths := []string{
+		filepath.Join("travel_planner", "__init__.py"),
+		filepath.Join("travel_planner", "agent.py"),
+		filepath.Join("travel_planner", ".env.example"),
+		filepath.Join("travel_planner", "sub_agents", "researcher", "__init__.py"),
+		filepath.Join("travel_planner", "sub_agents", "researcher", "agent.py"),
+		filepath.Join("travel_planner", "sub_agents", "itinerary_builder", "__init__.py"),
+		filepath.Join("travel_planner", "sub_agents", "itinerary_builder", "agent.py"),
+		"requirements.txt",
+		"README.md",
 	}
 
-	t.Logf("Generated content:\n%s", content)
-
-	expectedStrings := []string{
-		"from google.adk.agents import",
-		"SequentialAgent",
-		"LlmAgent",
-		"researcher = LlmAgent(",
-		`name="researcher"`,
-		`instruction="Research the topic"`,
-		`output_key="research_data"`,
-		"writer = LlmAgent(",
-		`name="writer"`,
-		"research_coordinator = SequentialAgent(",
-		`name="research_coordinator"`,
-		"sub_agents=[researcher, writer]",
-		"root_agent = research_coordinator",
-	}
-
-	for _, expected := range expectedStrings {
-		if !strings.Contains(content, expected) {
-			t.Errorf("GenerateAgentPy() missing expected string: %s", expected)
+	for _, expectedPath := range expectedPaths {
+		if _, ok := findFile(files, expectedPath); !ok {
+			t.Fatalf("GenerateProjectFiles() missing %s", expectedPath)
 		}
 	}
-}
 
-func TestGenerator_GenerateMainPy(t *testing.T) {
-	orch := model.NewOrchestrator("Coordinator", model.PatternSequential, "Test", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Agent1", model.AgentTypeLLM, "Task", "result", "gemini-2.0-flash"))
-
-	project := model.NewProject("test-project", orch)
-
-	gen := NewGenerator()
-	content, err := gen.GenerateMainPy(project)
-
-	if err != nil {
-		t.Fatalf("GenerateMainPy() error = %v", err)
+	rootInit, _ := findFile(files, filepath.Join("travel_planner", "__init__.py"))
+	if strings.TrimSpace(rootInit.Content) != "from . import agent" {
+		t.Fatalf("root __init__.py = %q, want %q", strings.TrimSpace(rootInit.Content), "from . import agent")
 	}
 
-	if content == "" {
-		t.Error("GenerateMainPy() returned empty content")
-	}
-
-	t.Logf("Generated main.py:\n%s", content)
-
-	expectedStrings := []string{
-		"from coordinator.agent import agent as root_agent",
-		"root_agent.run(",
-		`if __name__ == "__main__":`,
-	}
-
-	for _, expected := range expectedStrings {
-		if !strings.Contains(content, expected) {
-			t.Errorf("GenerateMainPy() missing expected string: %s", expected)
-		}
-	}
-}
-
-func TestGenerator_GenerateRequirementsTxt(t *testing.T) {
-	gen := NewGenerator()
-	content, err := gen.GenerateRequirementsTxt()
-
-	if err != nil {
-		t.Fatalf("GenerateRequirementsTxt() error = %v", err)
-	}
-
-	if content == "" {
-		t.Error("GenerateRequirementsTxt() returned empty content")
-	}
-
-	if !strings.Contains(content, "google-adk") {
-		t.Error("GenerateRequirementsTxt() missing google-adk dependency")
-	}
-}
-
-func TestGenerator_GenerateReadme(t *testing.T) {
-	orch := model.NewOrchestrator("Coordinator", model.PatternSequential, "Test coordinator", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Agent1", model.AgentTypeLLM, "Task", "result", "gemini-2.0-flash"))
-
-	project := model.NewProject("my-project", orch)
-
-	gen := NewGenerator()
-	content, err := gen.GenerateReadme(project)
-
-	if err != nil {
-		t.Fatalf("GenerateReadme() error = %v", err)
-	}
-
-	if content == "" {
-		t.Error("GenerateReadme() returned empty content")
-	}
-
-	expectedStrings := []string{
-		"# my-project",
-		"pip install -r requirements.txt",
-		"python main.py",
-	}
-
-	for _, expected := range expectedStrings {
-		if !strings.Contains(content, expected) {
-			t.Errorf("GenerateReadme() missing expected string: %s", expected)
-		}
-	}
-}
-
-func TestGenerator_GenerateAgentPy_ParallelPattern(t *testing.T) {
-	orch := model.NewOrchestrator("ParallelCoord", model.PatternParallel, "Parallel tasks", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Task1", model.AgentTypeLLM, "Do task 1", "result1", "gemini-2.0-flash"))
-	orch.AddSubAgent(model.NewAgent("Task2", model.AgentTypeLLM, "Do task 2", "result2", "gemini-2.0-flash"))
-
-	project := model.NewProject("parallel-project", orch)
-
-	gen := NewGenerator()
-	content, err := gen.GenerateAgentPy(project)
-
-	if err != nil {
-		t.Fatalf("GenerateAgentPy() error = %v", err)
-	}
-
-	if !strings.Contains(content, "ParallelAgent") {
-		t.Error("GenerateAgentPy() should use ParallelAgent for parallel pattern")
-	}
-
-	if !strings.Contains(content, "from google.adk.agents import") && !strings.Contains(content, "ParallelAgent") {
-		t.Error("GenerateAgentPy() missing ParallelAgent import")
-	}
-}
-
-func TestGenerator_GenerateAgentPy_LoopPattern(t *testing.T) {
-	orch := model.NewOrchestrator("LoopCoord", model.PatternLoop, "Loop tasks", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Task", model.AgentTypeLLM, "Iterative task", "result", "gemini-2.0-flash"))
-
-	project := model.NewProject("loop-project", orch)
-
-	gen := NewGenerator()
-	content, err := gen.GenerateAgentPy(project)
-
-	if err != nil {
-		t.Fatalf("GenerateAgentPy() error = %v", err)
-	}
-
-	if !strings.Contains(content, "LoopAgent") {
-		t.Error("GenerateAgentPy() should use LoopAgent for loop pattern")
-	}
-}
-
-func TestGenerator_GenerateAgentPy_WithHyphens(t *testing.T) {
-	orch := model.NewOrchestrator("APICoordinator", model.PatternSequential, "Coordinates API tasks", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("grafana-agent", model.AgentTypeLLM, "Query Grafana", "grafana_data", "gemini-2.0-flash"))
-	orch.AddSubAgent(model.NewAgent("data-processor", model.AgentTypeLLM, "Process data", "processed", "gemini-2.0-flash"))
-
-	project := model.NewProject("api-project", orch)
-
-	gen := NewGenerator()
-	content, err := gen.GenerateAgentPy(project)
-
-	if err != nil {
-		t.Fatalf("GenerateAgentPy() error = %v", err)
-	}
-
-	t.Logf("Generated content:\n%s", content)
-
-	if strings.Contains(content, "grafana-agent = ") {
-		t.Error("GenerateAgentPy() should not create Python variables with hyphens")
-	}
-
-	if !strings.Contains(content, "grafana_agent = ") {
-		t.Error("GenerateAgentPy() should convert hyphens to underscores in variable names")
-	}
-
-	if !strings.Contains(content, "data_processor = ") {
-		t.Error("GenerateAgentPy() should convert hyphens to underscores in variable names")
-	}
-
-	if !strings.Contains(content, `name="grafana_agent"`) {
-		t.Error("GenerateAgentPy() should convert hyphens to underscores in the name field")
-	}
-}
-
-func TestGenerator_GenerateOrchestratorPy(t *testing.T) {
-	orch := model.NewOrchestrator("ResearchCoordinator", model.PatternSequential, "Coordinates research tasks", "gemini-2.0-flash")
-	orch.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash"))
-	orch.AddSubAgent(model.NewAgent("Writer", model.AgentTypeLLM, "Write based on research", "draft", "gemini-2.0-flash"))
-
-	gen := NewGenerator()
-	content, err := gen.GenerateOrchestratorPy(orch)
-
-	if err != nil {
-		t.Fatalf("GenerateOrchestratorPy() error = %v", err)
-	}
-
-	if content == "" {
-		t.Error("GenerateOrchestratorPy() returned empty content")
-	}
-
-	t.Logf("Generated orchestrator:\n%s", content)
-
-	expectedStrings := []string{
+	rootAgent, _ := findFile(files, filepath.Join("travel_planner", "agent.py"))
+	expectedRootStrings := []string{
 		"from google.adk.agents import SequentialAgent",
-		"from researcher.agent import agent as researcher",
-		"from writer.agent import agent as writer",
-		"agent = SequentialAgent(",
-		`name="research_coordinator"`,
-		"sub_agents=[researcher, writer]",
-		"root_agent = agent",
+		"from .sub_agents.researcher import agent as researcher",
+		"from .sub_agents.itinerary_builder import agent as itinerary_builder",
+		"root_agent = SequentialAgent(",
+		`name="trip_coordinator"`,
+		"sub_agents=[researcher, itinerary_builder]",
+	}
+	for _, expected := range expectedRootStrings {
+		if !strings.Contains(rootAgent.Content, expected) {
+			t.Errorf("root agent missing %q", expected)
+		}
 	}
 
-	for _, expected := range expectedStrings {
-		if !strings.Contains(content, expected) {
-			t.Errorf("GenerateOrchestratorPy() missing expected string: %s", expected)
+	readme, _ := findFile(files, "README.md")
+	unexpectedReadmeStrings := []string{
+		"python main.py",
+		"root_agent.run(",
+	}
+	for _, unexpected := range unexpectedReadmeStrings {
+		if strings.Contains(readme.Content, unexpected) {
+			t.Errorf("README.md unexpectedly contains %q", unexpected)
+		}
+	}
+	expectedReadmeStrings := []string{
+		"adk run travel_planner",
+		"adk web --port 8000",
+		"travel_planner/.env.example",
+	}
+	for _, expected := range expectedReadmeStrings {
+		if !strings.Contains(readme.Content, expected) {
+			t.Errorf("README.md missing %q", expected)
+		}
+	}
+
+	requirements, _ := findFile(files, "requirements.txt")
+	if strings.TrimSpace(requirements.Content) != "google-adk==1.32.0" {
+		t.Fatalf("requirements.txt = %q, want %q", strings.TrimSpace(requirements.Content), "google-adk==1.32.0")
+	}
+
+	envExample, _ := findFile(files, filepath.Join("travel_planner", ".env.example"))
+	expectedEnvStrings := []string{
+		"GOOGLE_API_KEY",
+		"GOOGLE_GENAI_USE_VERTEXAI=TRUE",
+		"GOOGLE_CLOUD_PROJECT",
+		"GOOGLE_CLOUD_LOCATION",
+	}
+	for _, expected := range expectedEnvStrings {
+		if !strings.Contains(envExample.Content, expected) {
+			t.Errorf(".env.example missing %q", expected)
 		}
 	}
 }
 
-func TestGenerator_GenerateSubAgentPy(t *testing.T) {
-	agent := model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_data", "gemini-2.0-flash")
+func TestGenerator_GenerateProjectFiles_LLMCoordinator(t *testing.T) {
+	orchestrator := model.NewOrchestrator("Coordinator", model.PatternLLMCoordinated, "Delegates requests", "gemini-flash-latest")
+	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-flash-latest"))
+
+	project := model.NewProject("assistant", orchestrator)
 
 	gen := NewGenerator()
-	content, err := gen.GenerateSubAgentPy(agent)
-
+	files, err := gen.GenerateProjectFiles(project)
 	if err != nil {
-		t.Fatalf("GenerateSubAgentPy() error = %v", err)
+		t.Fatalf("GenerateProjectFiles() error = %v", err)
 	}
 
-	if content == "" {
-		t.Error("GenerateSubAgentPy() returned empty content")
+	rootAgent, _ := findFile(files, filepath.Join("assistant", "agent.py"))
+	expectedStrings := []string{
+		"from google.adk.agents import LlmAgent",
+		`model="gemini-flash-latest"`,
+		`instruction="""Coordinate the available sub-agents`,
+		"sub_agents=[researcher]",
+	}
+	for _, expected := range expectedStrings {
+		if !strings.Contains(rootAgent.Content, expected) {
+			t.Errorf("LLM coordinator root agent missing %q", expected)
+		}
+	}
+}
+
+func TestGenerator_GenerateProjectFiles_ParallelPattern(t *testing.T) {
+	orchestrator := model.NewOrchestrator("ParallelCoordinator", model.PatternParallel, "Runs tasks in parallel", "gemini-flash-latest")
+	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-flash-latest"))
+
+	project := model.NewProject("parallel-assistant", orchestrator)
+
+	gen := NewGenerator()
+	files, err := gen.GenerateProjectFiles(project)
+	if err != nil {
+		t.Fatalf("GenerateProjectFiles() error = %v", err)
 	}
 
-	t.Logf("Generated sub-agent:\n%s", content)
+	rootAgent, _ := findFile(files, filepath.Join("parallel_assistant", "agent.py"))
+	if !strings.Contains(rootAgent.Content, "root_agent = ParallelAgent(") {
+		t.Fatalf("parallel root agent should use ParallelAgent")
+	}
+}
 
+func TestGenerator_GenerateProjectFiles_LoopPattern(t *testing.T) {
+	orchestrator := model.NewOrchestrator("LoopCoordinator", model.PatternLoop, "Iterates until done", "gemini-flash-latest")
+	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-flash-latest"))
+
+	project := model.NewProject("loop-assistant", orchestrator)
+
+	gen := NewGenerator()
+	files, err := gen.GenerateProjectFiles(project)
+	if err != nil {
+		t.Fatalf("GenerateProjectFiles() error = %v", err)
+	}
+
+	rootAgent, _ := findFile(files, filepath.Join("loop_assistant", "agent.py"))
+	expectedStrings := []string{
+		"root_agent = LoopAgent(",
+		"max_iterations=3",
+	}
+	for _, expected := range expectedStrings {
+		if !strings.Contains(rootAgent.Content, expected) {
+			t.Fatalf("loop root agent missing %q", expected)
+		}
+	}
+}
+
+func TestGenerator_GenerateSingleAgentFiles_LLM(t *testing.T) {
+	agent := model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-flash-latest")
+
+	gen := NewGenerator()
+	files, err := gen.GenerateSingleAgentFiles(agent)
+	if err != nil {
+		t.Fatalf("GenerateSingleAgentFiles() error = %v", err)
+	}
+
+	expectedPaths := []string{
+		filepath.Join("researcher", "__init__.py"),
+		filepath.Join("researcher", "agent.py"),
+	}
+	for _, expectedPath := range expectedPaths {
+		if _, ok := findFile(files, expectedPath); !ok {
+			t.Fatalf("GenerateSingleAgentFiles() missing %s", expectedPath)
+		}
+	}
+
+	agentFile, _ := findFile(files, filepath.Join("researcher", "agent.py"))
 	expectedStrings := []string{
 		"from google.adk.agents import LlmAgent",
 		"agent = LlmAgent(",
 		`name="researcher"`,
-		`instruction="Research the topic"`,
-		`output_key="research_data"`,
-		`model="gemini-2.0-flash"`,
+		`model="gemini-flash-latest"`,
+		`output_key="research_notes"`,
 	}
-
 	for _, expected := range expectedStrings {
-		if !strings.Contains(content, expected) {
-			t.Errorf("GenerateSubAgentPy() missing expected string: %s", expected)
+		if !strings.Contains(agentFile.Content, expected) {
+			t.Errorf("LLM single agent missing %q", expected)
 		}
 	}
+}
+
+func TestGenerator_GenerateSingleAgentFiles_Custom(t *testing.T) {
+	agent := model.NewAgent("Formatter", model.AgentTypeCustom, "", "formatted_result", "")
+
+	gen := NewGenerator()
+	files, err := gen.GenerateSingleAgentFiles(agent)
+	if err != nil {
+		t.Fatalf("GenerateSingleAgentFiles() error = %v", err)
+	}
+
+	agentFile, _ := findFile(files, filepath.Join("formatter", "agent.py"))
+	expectedStrings := []string{
+		"from google.adk.agents import BaseAgent",
+		"from google.adk.agents.invocation_context import InvocationContext",
+		"from google.adk.events import Event",
+		"class FormatterAgent(BaseAgent):",
+		"async def _run_async_impl(self, ctx: InvocationContext)",
+		`ctx.session.state["formatted_result"] =`,
+		"agent = FormatterAgent(",
+	}
+	for _, expected := range expectedStrings {
+		if !strings.Contains(agentFile.Content, expected) {
+			t.Errorf("custom single agent missing %q", expected)
+		}
+	}
+
+	if strings.Contains(agentFile.Content, "LlmAgent(") {
+		t.Fatalf("custom single agent should not use LlmAgent")
+	}
+}
+
+func TestGenerator_GenerateProjectFiles_WithHyphenatedNames(t *testing.T) {
+	orchestrator := model.NewOrchestrator("API-Coordinator", model.PatternParallel, "Runs API tasks", "gemini-flash-latest")
+	orchestrator.AddSubAgent(model.NewAgent("grafana-agent", model.AgentTypeLLM, "Query Grafana", "grafana_data", "gemini-flash-latest"))
+
+	project := model.NewProject("api-project", orchestrator)
+
+	gen := NewGenerator()
+	files, err := gen.GenerateProjectFiles(project)
+	if err != nil {
+		t.Fatalf("GenerateProjectFiles() error = %v", err)
+	}
+
+	rootAgent, _ := findFile(files, filepath.Join("api_project", "agent.py"))
+	if strings.Contains(rootAgent.Content, "grafana-agent") {
+		t.Fatalf("root agent should normalize hyphenated identifiers")
+	}
+	if !strings.Contains(rootAgent.Content, "from .sub_agents.grafana_agent import agent as grafana_agent") {
+		t.Fatalf("root agent should use normalized sub-agent import")
+	}
+	if !strings.Contains(rootAgent.Content, `name="api_coordinator"`) {
+		t.Fatalf("root agent should normalize orchestrator name")
+	}
+}
+
+func findFile(files []File, path string) (File, bool) {
+	for _, file := range files {
+		if filepath.Clean(file.Path) == filepath.Clean(path) {
+			return file, true
+		}
+	}
+	return File{}, false
 }

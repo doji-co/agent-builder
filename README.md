@@ -1,147 +1,104 @@
 # Agent Builder
 
-ADK Multi-Agent Builder CLI - A tool to help build ADK (Agent Development Kit) agents.
+Agent Builder is a Go CLI for scaffolding Google ADK Python agent projects and reusable sub-agent packages.
 
 ## Installation
 
-### Homebrew (macOS/Linux)
+### Homebrew
 
 ```bash
 brew install doji-co/tap/agent-builder
 ```
 
-### Manual Installation
+### Manual
 
-Download the latest release from the [releases page](https://github.com/doji-co/agent-builder/releases).
+Download the latest release from the GitHub releases page.
 
 ## Usage
 
-### Create Command
-
-The `create` command offers two options:
+### Create a Project
 
 ```bash
 agent-builder create
 ```
 
-You'll be prompted to choose:
+The starter-project flow generates a current ADK package layout:
 
-#### Option 1: Starter Project
-
-Creates a complete multi-agent system from scratch. The CLI guides you through:
-
-1. **Project name** - Name for your multi-agent project
-2. **Orchestrator details** - The root agent that coordinates sub-agents
-   - Name
-   - Orchestration pattern (Sequential, Parallel, LLM-Coordinated, or Loop)
-   - Description
-   - Model selection (gemini-2.5-flash, gemini-2.5-pro, or gemini-2.5-flash-lite)
-3. **Sub-agents** - Individual agents that perform specific tasks
-   - Name
-   - Type (LLM or Tool)
-   - Instruction
-   - Output key
-   - Model
-
-**Generated structure:**
-```
+```text
 your-project/
-├── orchestrator_name/
-│   └── agent.py       # Orchestrator agent
-├── sub_agent_1/
-│   └── agent.py       # Sub-agent 1
-├── sub_agent_2/
-│   └── agent.py       # Sub-agent 2
-├── main.py            # Example usage
-├── requirements.txt   # Python dependencies
-└── README.md          # Project documentation
+├── requirements.txt
+├── README.md
+└── your_project/
+    ├── __init__.py
+    ├── .env.example
+    ├── agent.py
+    └── sub_agents/
+        ├── __init__.py
+        ├── researcher/
+        │   ├── __init__.py
+        │   └── agent.py
+        └── formatter/
+            ├── __init__.py
+            └── agent.py
 ```
 
-**Running your project:**
+Generated projects target stable ADK `1.32.x`, pin `google-adk==1.32.0`, and default to `gemini-flash-latest`.
+
+### Run a Generated Project
+
 ```bash
 cd your-project
+python3 -m venv .venv
+source .venv/bin/activate
 pip install -r requirements.txt
-
-# Run with command line
-python main.py "Your prompt here"
-
-# Or use ADK web interface
-adk web
+cp your_project/.env.example your_project/.env
+adk run your_project
+adk web --port 8000
 ```
 
-#### Option 2: Single Agent
+### Create a Single Agent Package
 
-Creates a single agent folder in the current directory. Perfect for adding new sub-agents to an existing project.
+The single-agent flow generates a reusable Python package with `__init__.py` and `agent.py` so it can be dropped into an existing ADK project's `sub_agents/` tree. It supports both `LlmAgent` scaffolds and `BaseAgent` custom-agent scaffolds.
 
-The CLI prompts for:
-- Agent name
-- Agent type (LLM or Tool)
-- Instruction
-- Output key
-- Model selection
-
-**Generated structure:**
-```
-./agent_name/
-└── agent.py
-```
-
-**To use the agent in your project:**
-```python
-# In your orchestrator's agent.py
-from agent_name.agent import agent as agent_name
-
-agent = SequentialAgent(
-    name="YourOrchestrator",
-    sub_agents=[..., agent_name],  # Add the new agent
-)
-```
-
-### Check Version
+### Version
 
 ```bash
 agent-builder version
+```
+
+### Patterns
+
+```bash
+agent-builder patterns
 ```
 
 ## Development
 
 ### Prerequisites
 
-- Go 1.23 or higher
+- Go 1.26+
 
-### Building
-
-```bash
-go build -o agent-builder .
-```
-
-### Running
+### Local Checks
 
 ```bash
-./agent-builder
+go test ./...
+go test -cover ./...
+go vet ./...
+go build ./...
 ```
 
-## Contributing
-
-Contributions are welcome! Please feel free to submit a Pull Request.
-
-### Releasing (for maintainers)
-
-To create a new release, tag the commit and push:
+## Releasing
 
 ```bash
 git tag v0.1.0
 git push origin v0.1.0
 ```
 
-This will automatically:
-- Build binaries for multiple platforms
-- Create a GitHub Release
-- Update the Homebrew tap
+This publishes release binaries and updates the Homebrew tap.
 
 ## About ADK
 
-This tool helps build [ADK (Agent Development Kit)](https://google.github.io/adk-docs/agents/multi-agents) multi-agents.
+The generated Python output follows the current ADK package conventions centered on `agent.py`, `__init__.py`, `root_agent`, `adk run`, and `adk web`.
 
 ## License
 
