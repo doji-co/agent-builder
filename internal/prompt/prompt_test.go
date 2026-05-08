@@ -1,6 +1,7 @@
 package prompt
 
 import (
+	"reflect"
 	"testing"
 
 	"github.com/doji-co/agent-builder/internal/model"
@@ -184,8 +185,8 @@ func TestResolveModel(t *testing.T) {
 	}{
 		{
 			name:      "uses selected model",
-			selection: "gemini-2.5-pro",
-			want:      "gemini-2.5-pro",
+			selection: "gemini-3.1-pro-preview",
+			want:      "gemini-3.1-pro-preview",
 		},
 		{
 			name:      "uses custom model value",
@@ -206,5 +207,25 @@ func TestResolveModel(t *testing.T) {
 				t.Errorf("ResolveModel() = %v, want %v", got, tt.want)
 			}
 		})
+	}
+}
+
+func TestAvailableModels(t *testing.T) {
+	if DefaultModel != "gemini-2.5-flash" {
+		t.Fatalf("DefaultModel = %q, want %q", DefaultModel, "gemini-2.5-flash")
+	}
+
+	want := []string{
+		DefaultModel,
+		"gemini-3-flash-preview",
+		"gemini-3.1-pro-preview",
+		"gemini-3.1-flash-lite",
+		"gemini-2.5-pro",
+		"gemini-2.5-flash-lite",
+		CustomModelOption,
+	}
+
+	if !reflect.DeepEqual(AvailableModels, want) {
+		t.Errorf("AvailableModels = %v, want %v", AvailableModels, want)
 	}
 }

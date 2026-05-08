@@ -74,14 +74,13 @@ func (i *Interactive) PromptOrchestratorDescription() (string, error) {
 
 func (i *Interactive) PromptModel(defaultModel string) (string, error) {
 	var selection string
+	options := make([]huh.Option[string], 0, len(AvailableModels))
+	for _, availableModel := range AvailableModels {
+		options = append(options, huh.NewOption(availableModel, availableModel))
+	}
 	err := huh.NewSelect[string]().
 		Title("Choose model").
-		Options(
-			huh.NewOption(AvailableModels[0], AvailableModels[0]),
-			huh.NewOption(AvailableModels[1], AvailableModels[1]),
-			huh.NewOption(AvailableModels[2], AvailableModels[2]),
-			huh.NewOption(AvailableModels[3], AvailableModels[3]),
-		).
+		Options(options...).
 		Value(&selection).
 		Run()
 	if err != nil {
