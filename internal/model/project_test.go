@@ -5,8 +5,8 @@ import (
 )
 
 func TestNewProject(t *testing.T) {
-	orch := NewOrchestrator("Coordinator", PatternSequential, "Test coordinator", "gemini-2.0-flash")
-	orch.AddSubAgent(NewAgent("Agent1", AgentTypeLLM, "Task 1", "result1", "gemini-2.0-flash"))
+	orch := NewOrchestrator("Coordinator", PatternSequential, "Test coordinator", "gemini-2.5-flash")
+	orch.AddSubAgent(NewAgent("Agent1", AgentTypeLLM, "Task 1", "result1", "gemini-2.5-flash"))
 
 	project := NewProject("my-project", orch)
 
@@ -31,8 +31,8 @@ func TestProject_Validate(t *testing.T) {
 		{
 			name: "valid project",
 			setup: func() *Project {
-				orch := NewOrchestrator("Coordinator", PatternSequential, "Test", "gemini-2.0-flash")
-				orch.AddSubAgent(NewAgent("Agent1", AgentTypeLLM, "Task", "result", "gemini-2.0-flash"))
+				orch := NewOrchestrator("Coordinator", PatternSequential, "Test", "gemini-2.5-flash")
+				orch.AddSubAgent(NewAgent("Agent1", AgentTypeLLM, "Task", "result", "gemini-2.5-flash"))
 				return NewProject("my-project", orch)
 			},
 			wantErr: false,
@@ -40,8 +40,8 @@ func TestProject_Validate(t *testing.T) {
 		{
 			name: "empty name returns error",
 			setup: func() *Project {
-				orch := NewOrchestrator("Coordinator", PatternSequential, "Test", "gemini-2.0-flash")
-				orch.AddSubAgent(NewAgent("Agent1", AgentTypeLLM, "Task", "result", "gemini-2.0-flash"))
+				orch := NewOrchestrator("Coordinator", PatternSequential, "Test", "gemini-2.5-flash")
+				orch.AddSubAgent(NewAgent("Agent1", AgentTypeLLM, "Task", "result", "gemini-2.5-flash"))
 				return NewProject("", orch)
 			},
 			wantErr: true,
@@ -58,7 +58,7 @@ func TestProject_Validate(t *testing.T) {
 		{
 			name: "invalid orchestrator returns error",
 			setup: func() *Project {
-				orch := NewOrchestrator("", PatternSequential, "Test", "gemini-2.0-flash")
+				orch := NewOrchestrator("", PatternSequential, "Test", "gemini-2.5-flash")
 				return NewProject("my-project", orch)
 			},
 			wantErr: true,

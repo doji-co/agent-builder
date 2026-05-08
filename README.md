@@ -42,7 +42,7 @@ your-project/
             └── agent.py
 ```
 
-Generated projects target stable ADK `1.32.x`, pin `google-adk==1.32.0`, and default to `gemini-flash-latest`.
+Generated projects target stable ADK `1.32.x`, pin `google-adk==1.32.0`, default to `gemini-2.5-flash`, and offer current Gemini 3 / 2.5 model options during scaffolding.
 
 ### Run a Generated Project
 

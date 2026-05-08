@@ -9,8 +9,8 @@ import (
 )
 
 func TestGenerator_GenerateProjectFiles(t *testing.T) {
-	orchestrator := model.NewOrchestrator("TripCoordinator", model.PatternSequential, "Coordinates travel planning", "gemini-flash-latest")
-	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the destination", "research_notes", "gemini-flash-latest"))
+	orchestrator := model.NewOrchestrator("TripCoordinator", model.PatternSequential, "Coordinates travel planning", "gemini-2.5-flash")
+	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the destination", "research_notes", "gemini-2.5-flash"))
 	orchestrator.AddSubAgent(model.NewAgent("ItineraryBuilder", model.AgentTypeCustom, "", "itinerary", ""))
 
 	project := model.NewProject("travel-planner", orchestrator)
@@ -100,8 +100,8 @@ func TestGenerator_GenerateProjectFiles(t *testing.T) {
 }
 
 func TestGenerator_GenerateProjectFiles_LLMCoordinator(t *testing.T) {
-	orchestrator := model.NewOrchestrator("Coordinator", model.PatternLLMCoordinated, "Delegates requests", "gemini-flash-latest")
-	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-flash-latest"))
+	orchestrator := model.NewOrchestrator("Coordinator", model.PatternLLMCoordinated, "Delegates requests", "gemini-2.5-flash")
+	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-2.5-flash"))
 
 	project := model.NewProject("assistant", orchestrator)
 
@@ -114,7 +114,7 @@ func TestGenerator_GenerateProjectFiles_LLMCoordinator(t *testing.T) {
 	rootAgent, _ := findFile(files, filepath.Join("assistant", "agent.py"))
 	expectedStrings := []string{
 		"from google.adk.agents import LlmAgent",
-		`model="gemini-flash-latest"`,
+		`model="gemini-2.5-flash"`,
 		`instruction="""Coordinate the available sub-agents`,
 		"sub_agents=[researcher]",
 	}
@@ -126,8 +126,8 @@ func TestGenerator_GenerateProjectFiles_LLMCoordinator(t *testing.T) {
 }
 
 func TestGenerator_GenerateProjectFiles_ParallelPattern(t *testing.T) {
-	orchestrator := model.NewOrchestrator("ParallelCoordinator", model.PatternParallel, "Runs tasks in parallel", "gemini-flash-latest")
-	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-flash-latest"))
+	orchestrator := model.NewOrchestrator("ParallelCoordinator", model.PatternParallel, "Runs tasks in parallel", "gemini-2.5-flash")
+	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-2.5-flash"))
 
 	project := model.NewProject("parallel-assistant", orchestrator)
 
@@ -144,8 +144,8 @@ func TestGenerator_GenerateProjectFiles_ParallelPattern(t *testing.T) {
 }
 
 func TestGenerator_GenerateProjectFiles_LoopPattern(t *testing.T) {
-	orchestrator := model.NewOrchestrator("LoopCoordinator", model.PatternLoop, "Iterates until done", "gemini-flash-latest")
-	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-flash-latest"))
+	orchestrator := model.NewOrchestrator("LoopCoordinator", model.PatternLoop, "Iterates until done", "gemini-2.5-flash")
+	orchestrator.AddSubAgent(model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-2.5-flash"))
 
 	project := model.NewProject("loop-assistant", orchestrator)
 
@@ -168,7 +168,7 @@ func TestGenerator_GenerateProjectFiles_LoopPattern(t *testing.T) {
 }
 
 func TestGenerator_GenerateSingleAgentFiles_LLM(t *testing.T) {
-	agent := model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-flash-latest")
+	agent := model.NewAgent("Researcher", model.AgentTypeLLM, "Research the topic", "research_notes", "gemini-2.5-flash")
 
 	gen := NewGenerator()
 	files, err := gen.GenerateSingleAgentFiles(agent)
@@ -191,7 +191,7 @@ func TestGenerator_GenerateSingleAgentFiles_LLM(t *testing.T) {
 		"from google.adk.agents import LlmAgent",
 		"agent = LlmAgent(",
 		`name="researcher"`,
-		`model="gemini-flash-latest"`,
+		`model="gemini-2.5-flash"`,
 		`output_key="research_notes"`,
 	}
 	for _, expected := range expectedStrings {
@@ -232,8 +232,8 @@ func TestGenerator_GenerateSingleAgentFiles_Custom(t *testing.T) {
 }
 
 func TestGenerator_GenerateProjectFiles_WithHyphenatedNames(t *testing.T) {
-	orchestrator := model.NewOrchestrator("API-Coordinator", model.PatternParallel, "Runs API tasks", "gemini-flash-latest")
-	orchestrator.AddSubAgent(model.NewAgent("grafana-agent", model.AgentTypeLLM, "Query Grafana", "grafana_data", "gemini-flash-latest"))
+	orchestrator := model.NewOrchestrator("API-Coordinator", model.PatternParallel, "Runs API tasks", "gemini-2.5-flash")
+	orchestrator.AddSubAgent(model.NewAgent("grafana-agent", model.AgentTypeLLM, "Query Grafana", "grafana_data", "gemini-2.5-flash"))
 
 	project := model.NewProject("api-project", orchestrator)
 

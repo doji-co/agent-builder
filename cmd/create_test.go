@@ -18,14 +18,14 @@ func TestCreateCommand_GeneratesFullProject(t *testing.T) {
 		orchestrationPattern:    model.PatternSequential,
 		orchestratorName:        "TripCoordinator",
 		orchestratorDescription: "Coordinates travel planning",
-		orchestratorModel:       "gemini-flash-latest",
+		orchestratorModel:       "gemini-2.5-flash",
 		agents: []stubAgentInput{
 			{
 				name:        "Researcher",
 				agentType:   model.AgentTypeLLM,
 				instruction: "Research the destination",
 				outputKey:   "research_notes",
-				model:       "gemini-flash-latest",
+				model:       "gemini-2.5-flash",
 			},
 			{
 				name:      "Formatter",
